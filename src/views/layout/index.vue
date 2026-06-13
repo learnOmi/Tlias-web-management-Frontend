@@ -33,7 +33,7 @@ const menuData = ref([
     children: [
       { name: "员工报表", path: "/report/emp", icon: "TrendCharts" },
       { name: "学生报表", path: "/report/stu", icon: "TrendCharts" },
-      { name: "日志报表", path: "/log", icon: "Document" },
+      { name: "日志报表", path: "/report/log", icon: "Document" },
     ],
   },
 ]);
