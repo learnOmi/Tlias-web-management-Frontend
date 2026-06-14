@@ -22,5 +22,5 @@ export const updateDept = (data) => {
 
 // 删除部门
 export const deleteDept = (id) => {
-  return axios.delete(`/depts/${id}`)
+  return axios.delete(`/depts/?id=${id}`)
 }
