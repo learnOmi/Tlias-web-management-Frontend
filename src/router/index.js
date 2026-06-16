@@ -34,4 +34,18 @@ const router = createRouter({
   routes
 })
 
+// 路由守卫：未登录时重定向到登录页
+router.beforeEach((to) => {
+  const token = localStorage.getItem("token");
+  if (to.path === "/login") {
+    if (token) {
+      return "/index";
+    }
+    return;
+  }
+  if (!token) {
+    return "/login";
+  }
+});
+
 export default router
