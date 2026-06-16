@@ -15,6 +15,7 @@ import {
 } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
 import { addEmp, updateEmp, getDeptList } from "@/api/emp";
+import axios from "@/utils/axios";
 
 // Props
 const props = defineProps({
@@ -169,7 +170,22 @@ const beforeAvatarUpload = (file) => {
     ElMessage.error("图片大小不能超过2M");
     return false;
   }
-  return false; // 阻止自动上传，通过手动方式上传
+  return true;
+};
+
+// 自定义上传（通过 axios 发送，自动携带 token）
+const handleAvatarUpload = async (options) => {
+  const formDataUpload = new FormData();
+  formDataUpload.append("file", options.file);
+  try {
+    const res = await axios.post("/upload", formDataUpload, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    onAvatarUploadSuccess(res.data);
+    options.onSuccess(res.data);
+  } catch {
+    options.onError(new Error("上传失败"));
+  }
 };
 
 // 头像上传成功回调
@@ -335,10 +351,9 @@ loadDeptList();
       <el-form-item label="头像" prop="image">
         <el-upload
           class="avatar-uploader"
-          action="/api/upload"
+          :http-request="handleAvatarUpload"
           :show-file-list="false"
           :before-upload="beforeAvatarUpload"
-          :on-success="onAvatarUploadSuccess"
           :limit="1"
         >
           <img v-if="formData.image" :src="formData.image" class="avatar" />

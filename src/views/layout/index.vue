@@ -1,8 +1,36 @@
 <script setup>
 import { ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { EditPen, SwitchButton } from "@element-plus/icons-vue";
+import PasswordDialog from "./PasswordDialog.vue";
 
 const route = useRoute();
+const router = useRouter();
+
+// 修改密码对话框
+const showPwdDialog = ref(false);
+
+// 打开修改密码对话框
+const handleOpenPwdDialog = () => {
+  showPwdDialog.value = true;
+};
+
+// 退出登录
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm("确定要退出登录吗？", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+  } catch {
+    return;
+  }
+  localStorage.removeItem("token");
+  ElMessage.success("已退出登录");
+  router.push("/login");
+};
 
 // 菜单数据
 const menuData = ref([
@@ -49,13 +77,13 @@ const activeMenu = ref(route.path);
       <el-header class="header">
         <span class="title">Tlias智能学习辅助系统</span>
         <span class="right_tool">
-          <a href="">
+          <a @click="handleOpenPwdDialog" style="cursor: pointer">
             <el-icon>
               <EditPen />
             </el-icon>
             修改密码 &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;
           </a>
-          <a href="">
+          <a @click="handleLogout" style="cursor: pointer">
             <el-icon>
               <SwitchButton />
             </el-icon>
@@ -109,6 +137,8 @@ const activeMenu = ref(route.path);
         </el-main>
       </el-container>
     </el-container>
+
+    <PasswordDialog v-model="showPwdDialog" />
   </div>
 </template>
 
