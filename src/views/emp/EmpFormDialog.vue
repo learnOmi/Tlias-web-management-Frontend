@@ -335,7 +335,7 @@ loadDeptList();
       <el-form-item label="头像" prop="image">
         <el-upload
           class="avatar-uploader"
-          action="/api/emp/upload"
+          action="/api/upload"
           :show-file-list="false"
           :before-upload="beforeAvatarUpload"
           :on-success="onAvatarUploadSuccess"
