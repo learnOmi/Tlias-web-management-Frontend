@@ -4,8 +4,10 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { login } from "@/api/login";
+import { useUserStore } from "@/stores";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const loginFormRef = ref(null);
 const isShaking = ref(false);
@@ -38,7 +40,13 @@ const handleLogin = async () => {
   }
   const res = await login(loginForm.value);
   ElMessage.success("登录成功");
-  localStorage.setItem("token", res.data.token);
+
+  // 使用 Pinia 存储 Token（兼容现有接口，后续后端增强后可直接用 setLoginData）
+  userStore.setToken(res.data.token);
+
+  // 后端接口增强后，可直接使用：
+  // userStore.setLoginData(res.data)
+
   router.push("/index");
 };
 

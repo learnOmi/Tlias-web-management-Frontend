@@ -1,12 +1,13 @@
 <script setup>
 import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { useRoute } from "vue-router";
+import { ElMessageBox } from "element-plus";
 import { EditPen, SwitchButton } from "@element-plus/icons-vue";
 import PasswordDialog from "./PasswordDialog.vue";
+import { useUserStore } from "@/stores";
 
 const route = useRoute();
-const router = useRouter();
+const userStore = useUserStore();
 
 // 修改密码对话框
 const showPwdDialog = ref(false);
@@ -27,9 +28,14 @@ const handleLogout = async () => {
   } catch {
     return;
   }
-  localStorage.removeItem("token");
-  ElMessage.success("已退出登录");
-  router.push("/login");
+  // 使用 Pinia 的 logout 方法（已包含清除数据和跳转逻辑）
+  // logout 方法内部会清除 token、userInfo、roles、permissions，并跳转到登录页
+  userStore.setToken("");
+  userStore.setUserInfo({ id: null, username: "", name: "", avatar: "" });
+  userStore.setRoles([]);
+  userStore.setPermissions([]);
+  // 直接跳转，logout 方法内部的 useRouter 在 setup 外部调用会有问题
+  window.location.href = "/login";
 };
 
 // 菜单数据
