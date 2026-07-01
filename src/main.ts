@@ -11,9 +11,15 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import { setupDirectives } from "./directives";
 import { setupErrorHandler } from "./utils/errorHandler";
 import { setupCommonComponents } from "./components/common";
+import { setupMonitor } from "./monitor";
+import { setupLogger } from "./utils/logger";
+import { printBuildInfo } from "./utils/buildInfo";
 import i18n from "./locales";
 
 import "./assets/main.css";
+
+setupLogger();
+printBuildInfo();
 
 const app = createApp(App);
 
@@ -27,6 +33,7 @@ app.use(ElementPlus, { locale: elementLocale });
 setupDirectives(app);
 setupErrorHandler(app);
 setupCommonComponents(app);
+setupMonitor(app);
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
