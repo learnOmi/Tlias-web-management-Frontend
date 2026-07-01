@@ -68,12 +68,45 @@
       </div>
       <div class="toolbar-right">
         <slot name="toolbar-right" />
+        <el-dropdown
+          v-if="columnSettingsVisible"
+          trigger="click"
+          @command="handleColumnCommand"
+        >
+          <el-button :icon="Setting" size="default"> 列设置 </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                v-for="col in columnConfigs"
+                :key="col.prop"
+                :command="col.prop"
+              >
+                <el-icon v-if="col.visible !== false"><Check /></el-icon>
+                <el-icon v-else style="visibility: hidden"><Check /></el-icon>
+                <span style="margin-left: 8px">{{ col.label }}</span>
+              </el-dropdown-item>
+              <el-dropdown-item divided command="reset">
+                <el-icon><Refresh /></el-icon>
+                <span style="margin-left: 8px">重置列</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
 
+    <div v-if="loading && showSkeleton" class="table-skeleton-container">
+      <table-skeleton
+        :rows="skeletonRows"
+        :columns="visibleColumnCount + 2"
+        :row-height="48"
+      />
+    </div>
+
     <el-table
+      v-show="!loading || !showSkeleton"
       ref="tableRef"
-      v-loading="loading"
+      v-loading="loading && !showSkeleton"
       :data="tableData"
       border
       stripe
@@ -86,7 +119,17 @@
         align="center"
       />
       <el-table-column type="index" label="序号" width="60" align="center" />
-      <slot />
+      <template v-for="col in columnConfigs" :key="col.prop">
+        <slot :name="`column-${col.prop}`" :col="col">
+          <el-table-column
+            v-if="col.visible !== false"
+            :prop="col.prop"
+            :label="col.label"
+            :width="col.width"
+            :fixed="col.fixed || false"
+          />
+        </slot>
+      </template>
       <el-table-column
         v-if="$slots.action"
         label="操作"
@@ -116,8 +159,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
-import { Plus, Delete } from "@element-plus/icons-vue";
+import { ref, reactive, watch, computed, onMounted } from "vue";
+import { Plus, Delete, Setting, Check, Refresh } from "@element-plus/icons-vue";
+import TableSkeleton from "./TableSkeleton.vue";
+import { useTableColumns } from "@/composables/useTableColumns";
 
 interface SearchColumn {
   prop: string;
@@ -125,6 +170,14 @@ interface SearchColumn {
   type?: "input" | "select" | "date";
   dateType?: string;
   options?: Array<{ label: string; value: string | number }>;
+}
+
+interface ColumnConfig {
+  prop: string;
+  label: string;
+  width?: number | string;
+  visible: boolean;
+  fixed?: "left" | "right" | boolean;
 }
 
 interface Props {
@@ -139,6 +192,11 @@ interface Props {
   addVisible?: boolean;
   batchDeleteVisible?: boolean;
   actionWidth?: number | string;
+  columns?: ColumnConfig[];
+  columnKey?: string;
+  columnSettingsVisible?: boolean;
+  showSkeleton?: boolean;
+  skeletonRows?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -153,7 +211,42 @@ const props = withDefaults(defineProps<Props>(), {
   addVisible: false,
   batchDeleteVisible: false,
   actionWidth: 200,
+  columns: () => [],
+  columnKey: "",
+  columnSettingsVisible: false,
+  showSkeleton: false,
+  skeletonRows: 5,
 });
+
+const tableColumns = computed(() => {
+  if (props.columns.length > 0) return props.columns;
+  return props.searchColumns.map((sc) => ({
+    prop: sc.prop,
+    label: sc.label,
+    visible: true,
+  }));
+});
+
+const {
+  columns: columnConfigs,
+  toggleColumn,
+  resetColumns,
+} = useTableColumns({
+  key: props.columnKey || "default",
+  defaultColumns: tableColumns.value,
+});
+
+const visibleColumnCount = computed(
+  () => columnConfigs.value.filter((c) => c.visible !== false).length
+);
+
+function handleColumnCommand(command: string) {
+  if (command === "reset") {
+    resetColumns();
+  } else {
+    toggleColumn(command);
+  }
+}
 
 const emit = defineEmits<{
   search: [form: Record<string, any>];
@@ -260,6 +353,11 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+.table-skeleton-container {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
 }
 .pro-table-pagination {
   margin-top: 16px;

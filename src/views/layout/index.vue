@@ -1,79 +1,100 @@
-<script setup>
-import { ref } from "vue";
-import { useRoute } from "vue-router";
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
-import { EditPen, SwitchButton } from "@element-plus/icons-vue";
+import { EditPen, SwitchButton, Rank } from "@element-plus/icons-vue";
 import PasswordDialog from "./PasswordDialog.vue";
-import { useUserStore } from "@/stores";
+import { useUserStore, useAppStore } from "@/stores";
+import { useGlobalShortcuts } from "@/composables/useShortcuts";
+import { useI18n } from "vue-i18n";
+import { setLocale } from "@/locales";
 
 const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
+const appStore = useAppStore();
+const { t, locale } = useI18n();
 
-// 修改密码对话框
+const cachedViews = computed(() => appStore.cachedViews);
+
+useGlobalShortcuts();
+
 const showPwdDialog = ref(false);
+const langDropdownVisible = ref(false);
 
-// 打开修改密码对话框
+const currentLangLabel = computed(() => {
+  return locale.value === "zh-CN" ? "中文" : "English";
+});
+
+const languageOptions = [
+  { label: "中文", value: "zh-CN" },
+  { label: "English", value: "en-US" },
+];
+
+function handleLanguageChange(lang: "zh-CN" | "en-US") {
+  setLocale(lang);
+  appStore.setLanguage(lang);
+}
+
 const handleOpenPwdDialog = () => {
   showPwdDialog.value = true;
 };
 
-// 退出登录
 const handleLogout = async () => {
   try {
-    await ElMessageBox.confirm("确定要退出登录吗？", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
+    await ElMessageBox.confirm(t("header.confirmLogout"), t("common.tips"), {
+      confirmButtonText: t("common.confirm"),
+      cancelButtonText: t("common.cancel"),
       type: "warning",
     });
   } catch {
     return;
   }
-  // 使用 Pinia 的 logout 方法（已包含清除数据和跳转逻辑）
-  // logout 方法内部会清除 token、userInfo、roles、permissions，并跳转到登录页
   userStore.setToken("");
   userStore.setUserInfo({ id: null, username: "", name: "", avatar: "" });
   userStore.setRoles([]);
   userStore.setPermissions([]);
-  // 直接跳转，logout 方法内部的 useRouter 在 setup 外部调用会有问题
   window.location.href = "/login";
 };
 
-// 菜单数据
-const menuData = ref([
+const activeMenu = ref(route.path);
+
+const menuData = computed(() => [
   {
-    name: "首页",
+    name: t("menu.home"),
     path: "/index",
     icon: "HomeFilled",
   },
   {
-    name: "系统信息管理",
+    name: t("menu.systemManagement"),
     icon: "Setting",
     children: [
-      { name: "部门管理", path: "/dept", icon: "OfficeBuilding" },
-      { name: "员工管理", path: "/emp", icon: "User" },
-    ]
-  },
-  {
-    name: "班级学员管理",
-    icon: "School",
-    children: [
-      { name: "班级管理", path: "/clazz", icon: "Grid" },
-      { name: "学生管理", path: "/stu", icon: "UserFilled" },
+      { name: t("menu.deptManagement"), path: "/dept", icon: "OfficeBuilding" },
+      { name: t("menu.empManagement"), path: "/emp", icon: "User" },
     ],
   },
   {
-    name: "数据统计管理",
+    name: t("menu.classStudentManagement"),
+    icon: "School",
+    children: [
+      { name: t("menu.classManagement"), path: "/clazz", icon: "Grid" },
+      { name: t("menu.studentManagement"), path: "/stu", icon: "UserFilled" },
+    ],
+  },
+  {
+    name: t("menu.dataStatistics"),
     icon: "DataLine",
     children: [
-      { name: "员工报表", path: "/report/emp", icon: "TrendCharts" },
-      { name: "学生报表", path: "/report/stu", icon: "TrendCharts" },
-      { name: "日志报表", path: "/report/log", icon: "Document" },
+      { name: t("menu.empReport"), path: "/report/emp", icon: "TrendCharts" },
+      {
+        name: t("menu.studentReport"),
+        path: "/report/stu",
+        icon: "TrendCharts",
+      },
+      { name: t("menu.logReport"), path: "/report/log", icon: "Document" },
     ],
   },
 ]);
-
-// 当前激活的菜单路径
-const activeMenu = ref(route.path);
 </script>
 
 <template>
@@ -81,19 +102,38 @@ const activeMenu = ref(route.path);
     <el-container>
       <!-- Header 区域 -->
       <el-header class="header">
-        <span class="title">Tlias智能学习辅助系统</span>
+        <span class="title">{{ $t("login.title") }}</span>
         <span class="right_tool">
+          <el-dropdown trigger="click" @command="handleLanguageChange">
+            <a style="cursor: pointer">
+              <el-icon><Rank /></el-icon>
+              {{ currentLangLabel }}
+              &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;
+            </a>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  v-for="opt in languageOptions"
+                  :key="opt.value"
+                  :command="opt.value"
+                >
+                  {{ opt.label }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
           <a @click="handleOpenPwdDialog" style="cursor: pointer">
             <el-icon>
               <EditPen />
             </el-icon>
-            修改密码 &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;
+            {{ $t("header.changePassword") }} &nbsp;&nbsp;&nbsp; |
+            &nbsp;&nbsp;&nbsp;
           </a>
           <a @click="handleLogout" style="cursor: pointer">
             <el-icon>
               <SwitchButton />
             </el-icon>
-            退出登录
+            {{ $t("header.logout") }}
           </a>
         </span>
       </el-header>
@@ -139,7 +179,11 @@ const activeMenu = ref(route.path);
         </el-aside>
 
         <el-main class="main">
-          <router-view />
+          <router-view v-slot="{ Component, route: routeObj }">
+            <keep-alive :include="cachedViews">
+              <component :is="Component" :key="routeObj.fullPath" />
+            </keep-alive>
+          </router-view>
         </el-main>
       </el-container>
     </el-container>

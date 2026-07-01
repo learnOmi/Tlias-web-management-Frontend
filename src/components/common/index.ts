@@ -4,6 +4,7 @@ import ProTable from "./ProTable.vue";
 import ProFormDialog from "./ProFormDialog.vue";
 import ImageUpload from "./ImageUpload.vue";
 import PageHeader from "./PageHeader.vue";
+import TableSkeleton from "./TableSkeleton.vue";
 
 const components: Component[] = [
   DictTag,
@@ -11,6 +12,7 @@ const components: Component[] = [
   ProFormDialog,
   ImageUpload,
   PageHeader,
+  TableSkeleton,
 ];
 
 export function setupCommonComponents(app: App): void {
@@ -22,4 +24,11 @@ export function setupCommonComponents(app: App): void {
   });
 }
 
-export { DictTag, ProTable, ProFormDialog, ImageUpload, PageHeader };
+export {
+  DictTag,
+  ProTable,
+  ProFormDialog,
+  ImageUpload,
+  PageHeader,
+  TableSkeleton,
+};
