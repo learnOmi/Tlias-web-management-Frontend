@@ -50,11 +50,8 @@ const handleLogout = async () => {
   } catch {
     return;
   }
-  userStore.setToken("");
-  userStore.setUserInfo({ id: null, username: "", name: "", avatar: "" });
-  userStore.setRoles([]);
-  userStore.setPermissions([]);
-  window.location.href = "/login";
+  // 调用 store 的统一登出逻辑，跳过成功提示（确认弹窗本身已是显式操作）
+  userStore.logout(true);
 };
 
 const activeMenu = ref(route.path);

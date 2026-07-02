@@ -1,11 +1,9 @@
 import type { App } from "vue";
 import { permission, role } from "./permission.js";
-import { setupLazyImageDirective } from "./lazyImage";
+import imageLazyDirective from "./lazyImage";
 
 export function setupDirectives(app: App): void {
   app.directive("permission", permission);
   app.directive("role", role);
-  setupLazyImageDirective(app);
+  app.directive("lazy", imageLazyDirective);
 }
-
-export { permission, role };

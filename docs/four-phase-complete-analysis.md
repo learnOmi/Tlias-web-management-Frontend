@@ -5,6 +5,7 @@
 本文档对 Tlias 智能学习辅助系统前端项目的四个阶段企业级升级进行了全面深入的分析，涵盖了从基础夯实到监控运维的完整能力建设过程。
 
 每个功能模块均包含以下六个维度的深度分析：
+
 - **功能介绍说明**：详细阐述功能的定义、作用和价值
 - **详细实现步骤**：从零到一的实现流程拆解
 - **流程图**：Mermaid 可视化的执行流程
@@ -14,20 +15,81 @@
 
 ---
 
+## 术语表
+
+> 在阅读下文之前，建议先了解以下技术术语的含义，有助于更好地理解各模块的技术原理。
+
+| 术语                      | 全称                          | 简要说明                                                                                                    |
+| ------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Composition API**       | Composition API               | Vue 3 提供的另一种编写组件的方式，相比 Options API 更灵活，支持更好的逻辑复用和 TypeScript 类型推断         |
+| **Setup Store**           | Setup Store 写法              | Pinia 状态管理的一种写法，使用 `<script setup>` 风格定义 Store，而非传统的 `state/getters/actions` 对象写法 |
+| **Pinia**                 | —                             | Vue 3 官方推荐的状态管理库，比 Vuex 更轻量，原生支持 TypeScript                                             |
+| **RBAC**                  | Role-Based Access Control     | 基于角色的访问控制，一种权限管理模型，通过"用户-角色-权限"的映射关系来控制资源访问                          |
+| **Ref**                   | Reactive Reference            | Vue 3 响应式 API，用一个包装对象（ref.value）包裹任意类型的值，使其具备响应性                               |
+| **Computed**              | Computed Property             | Vue 3 响应式 API，类似计算属性，基于响应式依赖自动缓存结果，仅在依赖变化时重新计算                          |
+| **Watch**                 | Watcher                       | Vue 3 响应式 API，侦听某个响应式数据的变化并执行回调函数                                                    |
+| **Deep Watch**            | Deep Watcher                  | Vue 3 中 `watch` 的 `deep: true` 选项，可以侦听对象内部嵌套属性的变化                                       |
+| **Lifecycle Hook**        | 生命周期钩子                  | Vue 组件从创建到销毁过程中在特定时刻自动调用的函数，如 `mounted`、`unmounted`、`onErrorCaptured` 等         |
+| **Slot**                  | —                             | Vue 的插槽机制，允许父组件向子组件模板中注入内容，实现组件的内容分发                                        |
+| **Directive**             | 自定义指令                    | Vue 提供的 DOM 底层操作机制，可用于在 DOM 元素的特定生命周期钩子中执行代码                                  |
+| **Interceptor**           | 拦截器                        | Axios 提供的中间件机制，可以在请求发送前或响应返回后拦截并处理数据                                          |
+| **CancelToken**           | 取消令牌                      | Axios 提供的请求取消机制，通过创建一个取消函数，在需要时主动取消已发送的请求                                |
+| **Middleware**            | 中间件                        | 请求处理链路上的拦截器，数据流经每个中间件时都可以对其进行修改或拦截                                        |
+| **HMR**                   | Hot Module Replacement        | 热模块替换，开发时只更新修改的模块而不刷新整个页面，大幅提升开发体验                                        |
+| **Tree Shaking**          | —                             | 构建工具移除未被引用的死代码的技术，减小最终打包体积                                                        |
+| **Code Splitting**        | 代码分割                      | 将应用代码拆分成多个 chunk，按需加载，减少首屏加载时间                                                      |
+| **Chunk**                 | —                             | 代码分割后产生的独立 JS/CSS 文件，浏览器按需加载                                                            |
+| **Webpack / Rollup**      | —                             | JavaScript 打包工具，将多个模块打包成少数几个文件供浏览器加载                                               |
+| **Vite**                  | —                             | 新一代前端构建工具，基于原生 ES 模块实现极速的开发服务器启动                                                |
+| **ESBuild**               | —                             | 用 Go 编写的超高速 JavaScript/TypeScript 打包器和压缩工具                                                   |
+| **Gzip**                  | —                             | 一种数据压缩算法，可将文本资源压缩至原大小的 30%-40%                                                        |
+| **Hash**                  | 哈希值                        | 通过哈希算法生成的固定长度字符串，用于唯一标识文件内容，内容不变则哈希不变                                  |
+| **LRU**                   | Least Recently Used           | 最近最少使用淘汰算法，缓存满时优先淘汰最久未使用的数据                                                      |
+| **FIFO**                  | First In First Out            | 先进先出淘汰策略，缓存满时优先淘汰最早进入的数据                                                            |
+| **JWT**                   | JSON Web Token                | 一种开放标准的令牌格式，用于在网络应用间安全地传输身份信息                                                  |
+| **RESTful API**           | —                             | 一种 API 设计风格，使用 HTTP 方法（GET/POST/PUT/DELETE）操作资源                                            |
+| **Cors**                  | Cross-Origin Resource Sharing | 跨域资源共享，浏览器安全机制，允许或限制网页向不同域名发起请求                                              |
+| **Proxy**                 | 代理                          | Vite 开发服务器提供的功能，将前端请求转发到后端服务器，解决跨域问题                                         |
+| **Intersection Observer** | —                             | 浏览器原生 API，异步观察目标元素与祖先元素或顶级文档视口的交叉状态变化                                      |
+| **Mutation Observer**     | —                             | 浏览器原生 API，监听 DOM 树的变化（新增/删除/属性变更等）                                                   |
+| **sendBeacon**            | —                             | 浏览器 API，用于在页面卸载时可靠地向服务器发送数据，不受页面关闭影响                                        |
+| **PerformanceObserver**   | —                             | 浏览器 API，监听性能相关事件（页面绘制、资源加载、布局偏移等）                                              |
+| **Core Web Vitals**       | —                             | Google 提出的一组网页性能评估指标，包括 LCP、FID、CLS 等                                                    |
+| **FCP**                   | First Contentful Paint        | 首次内容绘制时间，从页面开始加载到页面内容中任何部分渲染到屏幕的时间                                        |
+| **LCP**                   | Largest Contentful Paint      | 最大内容绘制时间，从页面开始加载到视口中最大内容元素渲染到屏幕的时间                                        |
+| **CLS**                   | Cumulative Layout Shift       | 累积布局偏移，衡量页面视觉稳定性，值越小表示页面越稳定                                                      |
+| **TTFB**                  | Time to First Byte            | 首字节时间，从页面请求开始到浏览器收到第一个字节的时间                                                      |
+| **Conventional Commits**  | —                             | 一种 Git 提交信息规范，格式为 `type(scope): description`，如 `feat(auth): add login`                        |
+| **Husky**                 | —                             | Git 钩子管理工具，让在 Git 操作时自动执行脚本变得简单                                                       |
+| **lint-staged**           | —                             | 对 Git 暂存区的文件运行检查命令，比全量检查更快                                                             |
+| **Monorepo**              | —                             | 单体仓库，将多个项目/包的代码放在同一个 Git 仓库中管理                                                      |
+| **Dependency Injection**  | —                             | 依赖注入，一种设计模式，将依赖对象传递给使用它的对象，而非由使用者自行创建                                  |
+| **Higher-Order Function** | 高阶函数                      | 接收函数作为参数或返回函数的函数，常用于函数式编程                                                          |
+| **Singleton Pattern**     | 单例模式                      | 确保一个类只有一个实例并提供全局访问点的設計模式                                                            |
+| **Observer Pattern**      | 观察者模式                    | 定义对象间一对多依赖关系，当一个对象状态改变时所有依赖者都会收到通知                                        |
+| **Declarative**           | 声明式编程                    | 描述"要做什么"而非"怎么做"的编程范式                                                                        |
+| **Imperative**            | 命令式编程                    | 描述"具体怎么做"的编程范式                                                                                  |
+| **DOM**                   | Document Object Model         | 文档对象模型，将 HTML/XML 文档表示为树形结构，JavaScript 通过 DOM API 操作页面元素                          |
+| **Reactive**              | 响应式                        | Vue 的核心特性，数据变化时自动更新视图                                                                      |
+| **Reactivity System**     | 响应式系统                    | Vue 中实现数据变化自动触发视图更新的底层机制                                                                |
+
+---
+
 ## 阶段总览
 
-| 阶段 | 名称 | 优先级 | 核心能力 | 功能数量 |
-|------|------|--------|----------|---------|
-| 阶段一 | 基础夯实 | P0 | TypeScript、Pinia、权限控制、通用组件、错误边界、请求封装 | 6大模块 |
-| 阶段二 | 工程化与效率 | P1 | Git工作流、多环境配置、构建优化 | 3大模块 |
-| 阶段三 | 体验与性能 | P2 | 骨架屏、列记忆、快捷键、ProTable、Keep-Alive、懒加载、请求缓存、i18n | 8大模块 |
-| 阶段四 | 监控与运维 | P3 | 性能监控、行为埋点、日志分级、构建信息、环境配置 | 5大模块 |
+| 阶段   | 名称         | 优先级 | 核心能力                                                             | 功能数量 |
+| ------ | ------------ | ------ | -------------------------------------------------------------------- | -------- |
+| 阶段一 | 基础夯实     | P0     | TypeScript、Pinia、权限控制、通用组件、错误边界、请求封装            | 6 大模块 |
+| 阶段二 | 工程化与效率 | P1     | Git 工作流、多环境配置、构建优化                                     | 3 大模块 |
+| 阶段三 | 体验与性能   | P2     | 骨架屏、列记忆、快捷键、ProTable、Keep-Alive、懒加载、请求缓存、i18n | 8 大模块 |
+| 阶段四 | 监控与运维   | P3     | 性能监控、行为埋点、日志分级、构建信息、环境配置                     | 5 大模块 |
 
 ---
 
 ## 完整目录
 
 ### 第一部分：阶段一 - 基础夯实（P0）
+
 1. TypeScript 配置
 2. Pinia 状态管理
 3. 权限指令系统
@@ -36,11 +98,13 @@
 6. Axios 请求封装
 
 ### 第二部分：阶段二 - 工程化与效率（P1）
+
 1. Git 工作流与代码规范
 2. 多环境配置体系
 3. 构建优化策略
 
 ### 第三部分：阶段三 - 体验与性能（P2）
+
 1. 骨架屏组件 TableSkeleton
 2. 表格列记忆 useTableColumns
 3. 快捷键系统 useShortcuts
@@ -51,6 +115,7 @@
 8. 国际化 i18n
 
 ### 第四部分：阶段四 - 监控与运维（P3）
+
 1. 性能监控系统
 2. 行为埋点系统
 3. 日志分级系统
@@ -58,7 +123,72 @@
 5. 环境配置完善
 
 ---
-# 阶段一（基础夯实P0）深度分析文档
+
+## 📖 阶段导读
+
+在深入每个模块之前，我们先了解一下各阶段的设计意图和模块之间的关系。
+
+### 阶段一：基础夯实（P0）— 为什么要先做这些？
+
+> **核心理念**：万丈高楼平地起。在项目初期建立坚实的基础设施，可以避免后期返工。
+
+本阶段完成了项目的"地基"建设。想象一下，如果没有 TypeScript 类型约束，随着项目膨胀，Bug 会像野草一样疯长；如果没有统一的 Axios 封装，每个页面都在重复写请求逻辑，维护成本会呈指数级增长；如果没有权限控制和错误边界，用户随时可能看到白屏或越权操作。
+
+**模块关系：**
+
+- `TypeScript 配置` → 为所有代码提供类型安全保障
+- `Axios 请求封装` → 统一前后端通信规范，其他模块依赖它
+- `Pinia 状态管理` → 全局数据中枢，权限指令和 Axios 都依赖它获取 Token
+- `权限指令` → 基于 Pinia 实现 UI 级权限控制
+- `错误边界` → 组件级容错，防止局部错误导致整站崩溃
+- `通用业务组件库` → 基于上述基础设施封装的高频复用组件
+
+**阅读顺序建议**：先理解 TypeScript 配置和 Axios 封装，再理解 Pinia 状态管理，最后看权限指令和通用组件，这样能更好地把握各模块之间的依赖关系。
+
+---
+
+### 阶段二：工程化与效率（P1）— 如何提升团队协作效率？
+
+> **核心理念**：用工具代替人工，用规范代替自觉。
+
+本阶段关注的是"如何让一群人高效协作"。Git 工作流确保每个人的代码质量可控，多环境配置让开发/测试/上线各司其职，构建优化则直接提升用户的加载体验。
+
+**模块关系：**
+
+- `Git 工作流` → 团队协作的基础规范
+- `多环境配置` → 支撑不同阶段的部署需求
+- `构建优化` → 基于前两者的产物进行性能优化
+
+---
+
+### 阶段三：体验与性能（P2）— 如何让用户感觉更快更好？
+
+> **核心理念**：用户体验无小事，性能优化永无止境。
+
+本阶段从"能用"走向"好用"。骨架屏让等待不再焦虑，列记忆尊重用户习惯，快捷键提升操作效率，ProTable 让开发更高效，Keep-Alive 让页面切换如丝般顺滑，图片懒加载和请求缓存减少不必要的网络请求，国际化则让产品面向全球用户。
+
+**模块关系：**
+
+- **体验类**：骨架屏、列记忆、快捷键、ProTable、国际化 → 直接提升用户感知
+- **性能类**：Keep-Alive、懒加载、请求缓存 → 减少资源消耗，提升加载速度
+
+---
+
+### 阶段四：监控与运维（P3）— 线上出了问题怎么办？
+
+> **核心理念**：预防胜于治疗，但治疗也要有数据支撑。
+
+本阶段构建的是"看得见、管得住"的运维体系。性能监控告诉你页面加载有多慢，行为埋点告诉你用户在哪里点击，日志分级帮你快速定位问题，构建信息注入让你知道线上跑的是哪个版本。
+
+**模块关系：**
+
+- `性能监控` + `行为埋点` → 数据采集层
+- `日志分级` → 数据管理層
+- `构建信息注入` + `环境配置完善` → 运维支撑层
+
+---
+
+# 阶段一（基础夯实 P0）深度分析文档
 
 ## 目录
 
@@ -203,69 +333,97 @@ flowchart LR
 
 ### 1.6 项目实际代码示例
 
-**tsconfig.json 核心配置：**
+**tsconfig.json 核心配置（带详细注释）：**
 
 ```json
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "preserve",
-    "strict": true,
-    "noImplicitAny": false,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
+    // ─── 编译目标与模块系统 ───
+    "target": "ES2020", // 将 TypeScript 编译为 ES2020 标准，兼容现代浏览器（Chrome 72+、Firefox 67+）
+    "useDefineForClassFields": true, // 使用标准 ECMAScript 语义定义类字段（非 TypeScript 私有语法）
+    "module": "ESNext", // 使用最新的 ES 模块系统，与 Vite 的 ESM 原生支持完美契合，支持 Tree Shaking
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], // 提供 ES2020 API 类型声明 + 浏览器 DOM API 类型声明 + Iterable 集合类型声明
+
+    // ─── 模块解析 ───
+    "skipLibCheck": true, // 跳过 node_modules 中 .d.ts 类型文件的检查，加快编译速度
+    "moduleResolution": "bundler", // 使用构建工具（Vite/Webpack）的模块解析策略，支持 package.json exports 字段
+    "allowImportingTsExtensions": true, // 允许 import 语句中使用 .ts/.tsx 扩展名（配合 noEmit 使用）
+    "resolveJsonModule": true, // 允许直接 import JSON 文件，如 import data from './config.json'
+
+    // ─── 编译输出 ───
+    "isolatedModules": true, // 每个文件独立编译，确保 ESBuild/Swc 等工具可以安全地进行单文件转换
+    "noEmit": true, // 不输出编译后的 JS 文件（Vite 负责实际构建，TypeScript 仅做类型检查）
+    "jsx": "preserve", // 保留 JSX 语法不转换（Vue 3 SFC 不需要 JSX 转换，由 Vite 处理）
+
+    // ─── 严格模式与兼容性 ───
+    "strict": true, // 开启所有严格类型检查选项的总开关
+    "noImplicitAny": false, // 【妥协项】允许未标注类型时使用隐式 any，降低从 JS 迁移的成本
+    "allowJs": true, // 允许编译 JavaScript 文件，支持 TS/JS 混合开发
+    "noUnusedLocals": false, // 【妥协项】不检查未使用的局部变量，避免开发阶段频繁报错
+    "noUnusedParameters": false, // 【妥协项】不检查未使用的函数参数
+    "noFallthroughCasesInSwitch": true, // 防止 switch 语句忘记写 break 导致穿透错误
+
+    // ─── 路径别名 ───
+    "baseUrl": ".", // 非相对路径导入的基准目录，"." 表示项目根目录
     "paths": {
-      "@/*": ["src/*"]
+      // 路径映射配置
+      "@/*": ["src/*"] // "@" 别名指向 "src/" 目录，如 import xxx from '@/views/login'
     },
-    "types": ["node", "nprogress"]
+
+    // ─── 类型声明 ───
+    "types": ["node", "nprogress"] // 额外加载 Node.js 类型和 NProgress 进度条类型声明
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
-  "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  // ─── 文件包含/排除 ───
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"], // 编译哪些文件
+  "exclude": ["node_modules", "dist"], // 排除哪些目录（不检查依赖和构建产物）
+  // ─── 项目引用 ───
+  "references": [{ "path": "./tsconfig.node.json" }] // 引用 Vite 节点端配置文件（用于 Vite 插件类型检查）
 }
 ```
 
-**vite-env.d.ts 环境变量声明：**
+````
+
+**vite-env.d.ts 环境变量声明（带详细注释）：**
 
 ```typescript
 /// <reference types="vite/client" />
+// ↑ 引入 Vite 内置的客户端类型声明，使 import.meta.env 具备基础类型推断
 
+// ─── 扩展 ImportMetaEnv 接口 ───
+// TypeScript 支持接口合并（Declaration Merging），此处将自定义环境变量合并到 Vite 自带的 ImportMetaEnv 中
 interface ImportMetaEnv {
-  readonly VITE_APP_TITLE: string;
-  readonly VITE_API_BASE_URL: string;
+  readonly VITE_APP_TITLE: string;          // 应用标题，如 "Tlias 智能学习辅助系统"
+  readonly VITE_API_BASE_URL: string;        // API 基础路径，如 "/api"
+  // 使用字面量联合类型而非 string，使 TypeScript 能精确推断合法值
   readonly VITE_APP_ENV: "development" | "test" | "staging" | "production";
-  readonly VITE_APP_VERSION: string;
-  readonly VITE_ENABLE_MOCK: string;
-  readonly VITE_ENABLE_DEVTOOLS: string;
+  readonly VITE_APP_VERSION: string;         // 应用版本号，如 "1.0.0"
+  readonly VITE_ENABLE_MOCK: string;         // 是否启用 Mock 数据开关
+  readonly VITE_ENABLE_DEVTOOLS: string;     // 是否启用浏览器 DevTools 调试
 }
 
+// ─── 扩展 ImportMeta 接口 ───
+// 让 import.meta.env 具备上面定义的完整类型，代码中访问 import.meta.env.VITE_APP_TITLE 时可获得自动补全
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+// ─── Vue 单文件组件类型声明 ───
+// 告诉 TypeScript：所有 .vue 文件导入后都是一个 DefineComponent 类型的组件
 declare module "*.vue" {
   import type { DefineComponent } from "vue";
+  // DefineComponent<Props, Emits, any> — 此处 Props 和 Emits 为空的泛型，
+  // 实际类型推断由 Volar 插件在 IDE 中完成
   const component: DefineComponent<{}, {}, any>;
   export default component;
 }
 
-declare const __APP_ENV__: string;
-declare const __BUILD_TIME__: string;
-declare const __BUILD_VERSION__: string;
-declare const __BUILD_ENV__: string;
-```
+// ─── 构建时注入的全局常量类型声明 ───
+// 这些常量在 vite.config.ts 的 define 配置中注入，构建时被静态替换为字面量值
+declare const __APP_ENV__: string;            // 应用运行环境：development / test / staging / production
+declare const __BUILD_TIME__: string;         // 构建时间戳，ISO 格式，如 "2024-01-15T08:30:00.000Z"
+declare const __BUILD_VERSION__: string;      // 构建版本号
+declare const __BUILD_ENV__: string;          // Vite 构建模式，如 "production"
+````
 
 ---
 
@@ -289,17 +447,20 @@ Pinia 状态管理是项目的全局数据中枢，采用 Vue 3 官方推荐的 
 **步骤二：用户状态 Store（useUserStore）实现**
 
 1. **State 定义**：使用 `ref` 定义四个核心状态
+
    - `token`：用户身份令牌，初始为空字符串
    - `userInfo`：用户基本信息对象，包含 id、username、name、avatar
    - `roles`：用户角色列表，初始为空数组
    - `permissions`：用户权限标识列表，初始为空数组
 
 2. **Computed 计算属性**：使用 `computed` 定义派生状态
+
    - `isLoggedIn`：根据 token 判断是否已登录
    - `isAdmin`：判断是否包含 admin 角色
    - `displayName`：用户显示名称（优先 name，其次 username）
 
 3. **Actions 方法实现**：
+
    - `setToken`、`setUserInfo`、`setRoles`、`setPermissions`：各状态的独立设置方法
    - `setLoginData`：登录成功后批量设置所有用户数据
    - `hasPermission`：权限检查方法，支持单个权限或权限数组（满足其一即可），admin 拥有所有权限
@@ -312,6 +473,7 @@ Pinia 状态管理是项目的全局数据中枢，采用 Vue 3 官方推荐的 
 **步骤三：应用全局状态 Store（useAppStore）实现**
 
 1. **State 定义**：
+
    - `sidebarCollapsed`：侧边栏折叠状态
    - `theme`：主题模式（light/dark）
    - `language`：当前语言
@@ -320,9 +482,11 @@ Pinia 状态管理是项目的全局数据中枢，采用 Vue 3 官方推荐的 
    - `cachedViews`：KeepAlive 缓存的路由名称列表
 
 2. **Computed 计算属性**：
+
    - `isDarkTheme`：判断是否为暗色主题
 
 3. **Actions 方法实现**：
+
    - 侧边栏控制：`toggleSidebar`、`setSidebarCollapsed`
    - 主题管理：`toggleTheme`、`setTheme`、`updateThemeStyle`（操作 DOM class）
    - 语言设置：`setLanguage`
@@ -335,10 +499,12 @@ Pinia 状态管理是项目的全局数据中枢，采用 Vue 3 官方推荐的 
 **步骤四：数据字典 Store（useDictStore）实现**
 
 1. **State 定义**：
+
    - `dictData`：字典数据对象，按类型分组存储，预置了 emp_job（员工职位）、stu_degree（学生学历）、gender（性别）三类字典
    - `isLoaded`：字典是否已从后端加载的标记
 
 2. **Actions 方法实现**：
+
    - `getDictByType`：根据字典类型获取列表
    - `getDictLabel`：根据类型和值获取显示文本
    - `getDictItem`：根据类型和值获取完整字典项
@@ -403,6 +569,7 @@ flowchart TD
 **模块化设计：**
 
 三个 Store 按照职责边界清晰划分：
+
 - **user store**：身份认证域，管理用户身份相关的所有数据
 - **app store**：UI 配置域，管理界面展示相关的全局状态
 - **dict store**：数据缓存域，管理系统枚举数据的缓存与访问
@@ -418,6 +585,7 @@ flowchart TD
 **权限检查逻辑：**
 
 `hasPermission` 方法的设计体现了良好的工程实践：
+
 1. **admin 特权**：管理员角色自动拥有所有权限，这是 RBAC 系统的常见设计
 2. **空列表处理**：权限列表为空时返回 false，避免误授权
 3. **数组支持**：支持传入权限数组，满足"或"逻辑（满足任意一个即可）
@@ -471,104 +639,247 @@ flowchart LR
 **stores/index.js 入口文件：**
 
 ```javascript
-import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { createPinia } from "pinia";
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
-const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
-export default pinia
+export default pinia;
 
-export * from './modules/user'
-export * from './modules/app'
-export * from './modules/dict'
+export * from "./modules/user";
+export * from "./modules/app";
+export * from "./modules/dict";
 ```
 
-**stores/modules/user.js 核心逻辑：**
+**stores/index.js 入口文件（带详细注释）：**
 
 ```javascript
-export const useUserStore = defineStore('user', () => {
-  const token = ref('')
-  const userInfo = ref({ id: null, username: '', name: '', avatar: '' })
-  const roles = ref([])
-  const permissions = ref([])
+import { createPinia } from "pinia";
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
-  const isLoggedIn = computed(() => !!token.value)
-  const isAdmin = computed(() => roles.value.includes('admin'))
-  const displayName = computed(() => userInfo.value.name || userInfo.value.username || '未知用户')
+// 创建 Pinia 实例 — 一个应用只需创建一个实例
+const pinia = createPinia();
+// 注册持久化插件：自动将 Store 数据同步到 localStorage
+// 注册后，每个 Store 可以通过 persist 配置选项声明需要持久化的状态
+pinia.use(piniaPluginPersistedstate);
 
-  const hasPermission = (permission) => {
-    if (isAdmin.value) return true
-    if (!permissions.value.length) return false
-    if (Array.isArray(permission)) {
-      return permission.some(p => permissions.value.includes(p))
-    }
-    return permissions.value.includes(permission)
-  }
+// 默认导出：在 main.ts 中通过 app.use(pinia) 使用
+export default pinia;
 
-  const setLoginData = (data) => {
-    setToken(data.token)
-    if (data.userInfo) setUserInfo(data.userInfo)
-    if (data.roles) setRoles(data.roles)
-    if (data.permissions) setPermissions(data.permissions)
-  }
-
-  const logout = async () => {
-    token.value = ''
-    userInfo.value = { id: null, username: '', name: '', avatar: '' }
-    roles.value = []
-    permissions.value = []
-    ElMessage.success('已退出登录')
-    const router = useRouter()
-    router.push('/login')
-  }
-
-  return { token, userInfo, roles, permissions, isLoggedIn, isAdmin, displayName, setLoginData, hasPermission, hasRole, logout, clearUserData }
-}, {
-  persist: {
-    key: 'tlias-user',
-    storage: localStorage,
-    paths: ['token', 'userInfo', 'roles', 'permissions']
-  }
-})
+// 具名导出所有 Store 模块：业务代码只需 import { useUserStore } from '@/stores'
+export * from "./modules/user";
+export * from "./modules/app";
+export * from "./modules/dict";
 ```
 
-**stores/modules/dict.js 字典缓存：**
+**stores/modules/user.js 核心逻辑（带详细注释）：**
 
 ```javascript
-export const useDictStore = defineStore('dict', () => {
-  const dictData = ref({
-    emp_job: [
-      { label: '班主任', value: 1 },
-      { label: '讲师', value: 2 },
-    ],
-    gender: [
-      { label: '男', value: 1 },
-      { label: '女', value: 2 },
-    ],
-  })
-  const isLoaded = ref(false)
+// defineStore 是 Pinia 创建 Store 的 API
+// 第一个参数 'user' 是 Store 的唯一 ID，用于 DevTools 标识和持久化 key 生成
+// 第二个参数是 Setup 函数，使用 Composition API 风格定义 State/Getters/Actions
+export const useUserStore = defineStore(
+  "user",
+  () => {
+    // ═══════════════════════════════════════
+    // State：使用 ref 定义响应式状态
+    // ═══════════════════════════════════════
+    const token = ref(""); // JWT Token 字符串，登录后从接口获取并存储
+    // userInfo 包含用户基本信息，初始值为空对象
+    const userInfo = ref({ id: null, username: "", name: "", avatar: "" });
+    const roles = ref([]); // 用户角色列表，如 ['admin']
+    const permissions = ref([]); // 用户权限标识列表，如 ['system:emp:list']
 
-  const getDictByType = (type) => dictData.value[type] || []
-  const getDictLabel = (type, value) => {
-    const list = getDictByType(type)
-    const item = list.find((d) => d.value === value)
-    return item ? item.label : ''
-  }
-  const getDictItem = (type, value) => {
-    const list = getDictByType(type)
-    return list.find((d) => String(d.value) === String(value)) || null
-  }
+    // ═══════════════════════════════════════
+    // Getters：使用 computed 定义派生状态（自动缓存，依赖不变时不重新计算）
+    // ═══════════════════════════════════════
+    // !! 将空字符串转为布尔值，token 为空则 isLoggedIn 为 false
+    const isLoggedIn = computed(() => !!token.value);
+    // 检查 roles 数组中是否包含 'admin' 角色
+    const isAdmin = computed(() => roles.value.includes("admin"));
+    // 显示名称优先取 name，其次 username，都为空则显示'未知用户'
+    const displayName = computed(
+      () => userInfo.value.name || userInfo.value.username || "未知用户"
+    );
 
-  return { dictData, isLoaded, getDictByType, getDictLabel, getDictItem, setDictData, setAllDictData, clearDictData, loadDictFromServer }
-}, {
-  persist: {
-    key: 'tlias-dict',
-    storage: localStorage,
-    paths: ['dictData', 'isLoaded'],
+    // ═══════════════════════════════════════
+    // Actions：定义修改状态的方法
+    // ═══════════════════════════════════════
+
+    /**
+     * 权限检查方法
+     * @param {string|string[]} permission - 单个权限标识或权限数组
+     * @returns {boolean} - 是否有权限
+     */
+    const hasPermission = (permission) => {
+      // 管理员拥有所有权限，直接放行
+      if (isAdmin.value) return true;
+      // 权限列表为空说明未登录或未获取权限，拒绝访问
+      if (!permissions.value.length) return false;
+      // 如果传入的是数组，采用"或"逻辑：满足任意一个即可
+      if (Array.isArray(permission)) {
+        return permission.some((p) => permissions.value.includes(p));
+      }
+      // 单个权限：直接检查是否在权限列表中
+      return permissions.value.includes(permission);
+    };
+
+    /**
+     * 角色检查方法（与 hasPermission 逻辑类似）
+     */
+    const hasRole = (role) => {
+      if (isAdmin.value) return true;
+      if (!roles.value.length) return false;
+      if (Array.isArray(role)) {
+        return role.some((r) => roles.value.includes(r));
+      }
+      return roles.value.includes(role);
+    };
+
+    /**
+     * 登录成功后批量设置用户数据
+     * @param {Object} data - 登录接口返回的数据
+     */
+    const setLoginData = (data) => {
+      setToken(data.token);
+      if (data.userInfo) setUserInfo(data.userInfo);
+      if (data.roles) setRoles(data.roles);
+      if (data.permissions) setPermissions(data.permissions);
+    };
+
+    /**
+     * 退出登录：清除所有数据并跳转到登录页
+     */
+    const logout = async () => {
+      token.value = "";
+      userInfo.value = { id: null, username: "", name: "", avatar: "" };
+      roles.value = [];
+      permissions.value = [];
+      ElMessage.success("已退出登录");
+      const router = useRouter();
+      router.push("/login");
+    };
+
+    /**
+     * 仅清除数据不跳转，用于接口返回 401（Token 过期）时调用
+     */
+    const clearUserData = () => {
+      token.value = "";
+      userInfo.value = { id: null, username: "", name: "", avatar: "" };
+      roles.value = [];
+      permissions.value = [];
+    };
+
+    // 返回所有状态和方法，供外部使用
+    // Pinia 会自动将这些返回值包装为响应式数据
+    return {
+      token,
+      userInfo,
+      roles,
+      permissions,
+      isLoggedIn,
+      isAdmin,
+      displayName,
+      setLoginData,
+      hasPermission,
+      hasRole,
+      logout,
+      clearUserData,
+    };
   },
-})
+  {
+    // ─── 持久化配置 ───
+    // pinia-plugin-persistedstate 插件的选项
+    persist: {
+      key: "tlias-user", // localStorage 中的存储键名
+      storage: localStorage, // 使用 localStorage（也可用 sessionStorage）
+      // 只持久化这四个状态，其他如 isLoggedIn 是派生状态无需持久化
+      paths: ["token", "userInfo", "roles", "permissions"],
+    },
+  }
+);
 ```
+
+**stores/modules/dict.js 字典缓存（带详细注释）：**
+
+```javascript
+export const useDictStore = defineStore(
+  "dict",
+  () => {
+    // dictData 按字典类型分组存储枚举数据
+    // 结构：{ 字典类型: [{ label: 显示文本, value: 编码值, tagType?: 标签颜色 }] }
+    const dictData = ref({
+      // emp_job：员工职位字典
+      emp_job: [
+        { label: "班主任", value: 1 },
+        { label: "讲师", value: 2 },
+      ],
+      // gender：性别字典
+      gender: [
+        { label: "男", value: 1 },
+        { label: "女", value: 2 },
+      ],
+    });
+    // 标记字典是否已从后端加载完成（预留接口，当前为硬编码）
+    const isLoaded = ref(false);
+
+    /** 根据字典类型获取字典列表 */
+    const getDictByType = (type) => dictData.value[type] || [];
+
+    /** 根据类型和值获取显示文本 */
+    const getDictLabel = (type, value) => {
+      const list = getDictByType(type);
+      const item = list.find((d) => d.value === value);
+      return item ? item.label : "";
+    };
+
+    /**
+     * 根据类型和值获取完整字典项
+     * 使用 String() 转换值进行比较，避免数字/字符串类型不一致导致匹配失败
+     * 例如：数据库中 value 是数字 1，前端传入可能是字符串 '1'
+     */
+    const getDictItem = (type, value) => {
+      const list = getDictByType(type);
+      return list.find((d) => String(d.value) === String(value)) || null;
+    };
+
+    // ...其余方法省略
+
+    return {
+      dictData,
+      isLoaded,
+      getDictByType,
+      getDictLabel,
+      getDictItem,
+      setDictData,
+      setAllDictData,
+      clearDictData,
+      loadDictFromServer,
+    };
+  },
+  {
+    persist: {
+      key: "tlias-dict",
+      storage: localStorage,
+      paths: ["dictData", "isLoaded"],
+    },
+  }
+);
+```
+
+}
+
+return { dictData, isLoaded, getDictByType, getDictLabel, getDictItem, setDictData, setAllDictData, clearDictData, loadDictFromServer }
+}, {
+persist: {
+key: 'tlias-dict',
+storage: localStorage,
+paths: ['dictData', 'isLoaded'],
+},
+})
+
+````
 
 ---
 
@@ -636,7 +947,7 @@ flowchart TD
     N -->|否| P[元素已不在 DOM 中，忽略]
     O --> Q[元素从 DOM 树中消失]
     P --> Q
-```
+````
 
 ### 3.4 逻辑分析
 
@@ -703,51 +1014,86 @@ flowchart LR
 
 ### 3.6 项目实际代码示例
 
-**directives/permission.js 完整实现：**
+**directives/permission.js 完整实现（带详细注释）：**
 
 ```javascript
-import { useUserStore } from '@/stores'
+import { useUserStore } from "@/stores";
 
+/**
+ * v-permission 权限指令
+ * 用法：<el-button v-permission="'system:emp:add'">新增</el-button>
+ *
+ * Vue 自定义指令对象，包含以下生命周期钩子：
+ *   - mounted：元素插入 DOM 后调用（权限检查在此阶段执行）
+ *   - updated：元素更新后调用（本指令未使用，如需支持动态权限可添加）
+ */
 export const permission = {
+  /**
+   * mounted 钩子：元素挂载到 DOM 后触发
+   * @param {HTMLElement} el - 指令绑定的 DOM 元素
+   * @param {Object} binding - 指令绑定信息对象
+   *   - binding.value：指令绑定的值，如 v-permission="'system:emp:add'" 中的 "'system:emp:add'"
+   *   - binding.arg：指令参数，如 v-permission:admin 中的 "admin"
+   *   - binding.modifiers：指令修饰符，如 v-permission.admin 中的 { admin: true }
+   */
   mounted(el, binding) {
-    const userStore = useUserStore()
-    const value = binding.value
+    // 获取 Pinia 用户状态实例，用于权限检查
+    const userStore = useUserStore();
+    // 获取指令绑定的权限标识值
+    const value = binding.value;
 
+    // 边界检查：如果开发者忘记传入权限标识，输出警告并终止
     if (!value) {
-      console.warn('[v-permission] 未传入权限标识')
-      return
+      console.warn("[v-permission] 未传入权限标识");
+      return;
     }
 
-    const hasPermission = userStore.hasPermission(value)
+    // 委托 userStore.hasPermission 进行权限校验
+    // hasPermission 内部逻辑：管理员返回 true，否则检查 permissions 数组
+    const hasPermission = userStore.hasPermission(value);
 
+    // 无权限时从 DOM 中彻底移除元素
+    // 使用可选链 ?. 防止 el.parentNode 为 null 时报错（如元素已被其他逻辑移除）
     if (!hasPermission) {
-      el.parentNode?.removeChild(el)
+      el.parentNode?.removeChild(el);
     }
-  }
-}
+  },
+};
 
+/**
+ * v-role 角色指令
+ * 用法：<div v-role="'admin'">管理员面板</div>
+ * 实现逻辑与 v-permission 完全相同，区别在于调用 userStore.hasRole() 而非 hasPermission()
+ */
 export const role = {
   mounted(el, binding) {
-    const userStore = useUserStore()
-    const value = binding.value
+    const userStore = useUserStore();
+    const value = binding.value;
 
     if (!value) {
-      console.warn('[v-role] 未传入角色标识')
-      return
+      console.warn("[v-role] 未传入角色标识");
+      return;
     }
 
-    const hasRole = userStore.hasRole(value)
+    const hasRole = userStore.hasRole(value);
 
     if (!hasRole) {
-      el.parentNode?.removeChild(el)
+      el.parentNode?.removeChild(el);
     }
-  }
-}
+  },
+};
 
+/**
+ * 统一注册所有自定义指令
+ * 在 main.ts 中调用此函数，将所有指令注册到 Vue 应用实例
+ * @param {App} app - Vue 应用实例
+ */
 export const setupDirectives = (app) => {
-  app.directive('permission', permission)
-  app.directive('role', role)
-}
+  // app.directive('permission', permission) 注册为全局指令
+  // 注册后，所有组件模板中可直接使用 v-permission，无需在每个组件中单独导入
+  app.directive("permission", permission);
+  app.directive("role", role);
+};
 ```
 
 **使用示例（业务组件中）：**
@@ -760,7 +1106,10 @@ export const setupDirectives = (app) => {
   </el-button>
 
   <!-- 多个权限（满足任意一个） -->
-  <el-button v-permission="['system:emp:edit', 'system:emp:view']" @click="handleView">
+  <el-button
+    v-permission="['system:emp:edit', 'system:emp:view']"
+    @click="handleView"
+  >
     查看详情
   </el-button>
 
@@ -770,9 +1119,7 @@ export const setupDirectives = (app) => {
   </el-button>
 
   <!-- 多角色控制 -->
-  <div v-role="['admin', 'manager']" class="admin-panel">
-    管理员面板
-  </div>
+  <div v-role="['admin', 'manager']" class="admin-panel">管理员面板</div>
 </template>
 ```
 
@@ -935,7 +1282,7 @@ flowchart LR
 
 ### 4.6 项目实际代码示例
 
-**components/common/index.ts 统一注册：**
+**components/common/index.ts 统一注册（带详细注释）：**
 
 ```typescript
 import type { App, Component } from "vue";
@@ -946,6 +1293,8 @@ import ImageUpload from "./ImageUpload.vue";
 import PageHeader from "./PageHeader.vue";
 import TableSkeleton from "./TableSkeleton.vue";
 
+// 将所有通用组件收集到一个数组中统一管理
+// 当需要新增组件时，只需在这里 import 并添加到数组即可
 const components: Component[] = [
   DictTag,
   ProTable,
@@ -955,25 +1304,50 @@ const components: Component[] = [
   TableSkeleton,
 ];
 
+/**
+ * 批量注册通用组件为全局组件
+ * 在 main.ts 中调用此函数后，所有组件模板中可直接使用组件名，无需单独 import
+ * @param app - Vue 应用实例
+ *
+ * 注册原理：
+ *   app.component(name, component) 将组件注册为全局可用
+ *   组件名取自组件的 name 或 __name 属性
+ *   例如 DictTag.vue 注册后，模板中可直接写 <DictTag />
+ */
 export function setupCommonComponents(app: App): void {
   components.forEach((component) => {
+    // 获取组件名称（兼容多种组件定义方式）
     const name = (component as any).name || (component as any).__name;
     if (name) {
+      // 注册为全局组件，所有 Vue 组件无需 import 即可使用
       app.component(name, component);
     }
   });
 }
 
-export { DictTag, ProTable, ProFormDialog, ImageUpload, PageHeader, TableSkeleton };
+// 同时具名导出，支持按需导入：import { DictTag, ProTable } from '@/components/common'
+export {
+  DictTag,
+  ProTable,
+  ProFormDialog,
+  ImageUpload,
+  PageHeader,
+  TableSkeleton,
+};
 ```
 
-**DictTag.vue 字典标签：**
+**DictTag.vue 字典标签（带详细注释）：**
 
 ```vue
 <template>
+  <!-- v-if：如果找到了对应的字典项，渲染 el-tag 标签 -->
+  <!-- :type 动态设置标签颜色（如 success=绿色, warning=橙色） -->
+  <!-- effect="light" 设置浅色填充效果 -->
   <el-tag v-if="dictItem" :type="dictItem.tagType || 'info'" effect="light">
     {{ dictItem.label }}
+    <!-- 显示字典的 label，如 "班主任" -->
   </el-tag>
+  <!-- v-else：未找到字典项时显示 "-" -->
   <span v-else>-</span>
 </template>
 
@@ -981,36 +1355,45 @@ export { DictTag, ProTable, ProFormDialog, ImageUpload, PageHeader, TableSkeleto
 import { computed } from "vue";
 import { useDictStore } from "@/stores/modules/dict";
 
+// 定义组件 Props 的 TypeScript 接口
 interface Props {
-  dictType: string;
-  value: string | number;
+  dictType: string; // 字典类型，如 "emp_job"、"gender"
+  value: string | number; // 字典值，如 1、"1"
 }
 
+// 接收父组件传入的 props
 const props = defineProps<Props>();
+// 获取字典 Store 实例
 const dictStore = useDictStore();
 
+// 计算属性：根据 props 查询字典项
+// 当 dictType 或 value 变化时自动重新计算
 const dictItem = computed(() => {
+  // 调用字典 Store 的 getDictItem 方法，内部使用 String() 转换避免类型不一致
   return dictStore.getDictItem(props.dictType, props.value);
 });
 </script>
 ```
 
-**ProFormDialog.vue 表单弹窗核心逻辑：**
+**ProFormDialog.vue 表单弹窗核心逻辑（带详细注释）：**
 
 ```vue
 <script setup lang="ts">
 import { ref, watch, reactive } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 
+// 定义 Props 接口
 interface Props {
-  modelValue: boolean;
-  title?: string;
-  width?: string | number;
-  rules?: FormRules;
-  initialData?: Record<string, any>;
-  submitLoading?: boolean;
+  modelValue: boolean; // v-model 绑定的可见性状态
+  title?: string; // 弹窗标题
+  width?: string | number; // 弹窗宽度，默认 600px
+  rules?: FormRules; // Element Plus 表单验证规则
+  initialData?: Record<string, any>; // 表单初始数据（编辑时传入）
+  submitLoading?: boolean; // 提交按钮加载状态
 }
 
+// withDefaults：为 Props 设置默认值
+// rules 和 initialData 的默认值使用工厂函数返回新对象，避免多个实例共享同一引用
 const props = withDefaults(defineProps<Props>(), {
   title: "",
   width: "600px",
@@ -1019,34 +1402,59 @@ const props = withDefaults(defineProps<Props>(), {
   submitLoading: false,
 });
 
+// 定义 Emits：组件向父组件发送的事件
+// "update:modelValue" 是 Vue 3 v-model 的标准事件名
+// submit 事件携带表单数据，父组件通过 @submit="handleSubmit" 接收
 const emit = defineEmits<{
   "update:modelValue": [val: boolean];
   submit: [formData: Record<string, any>];
 }>();
 
+// ─── 内部响应式状态 ───
+// formRef：Element Plus 表单组件的实例引用，用于调用 validate/resetFields 等方法
 const formRef = ref<FormInstance>();
+// visible：控制弹窗显示/隐藏的本地状态（与 props.modelValue 双向同步）
 const visible = ref(props.modelValue);
+// formData：表单数据对象，使用 reactive 使其具备响应性
+// 初始值从 props.initialData 浅拷贝而来，编辑时预填充数据
 const formData = reactive<Record<string, any>>({ ...props.initialData });
 
-watch(() => props.modelValue, (val) => {
-  visible.value = val;
-  if (val) resetForm();
-});
+// ─── 监听 props.modelValue 变化 ───
+// 当父组件修改 v-model 绑定的值时，同步更新 visible 状态
+// 弹窗打开时（val === true），自动重置表单数据
+watch(
+  () => props.modelValue,
+  (val) => {
+    visible.value = val;
+    if (val) resetForm();
+  }
+);
 
+/** 重置表单：清空表单验证状态，并用 initialData 重新填充数据 */
 function resetForm() {
-  formRef.value?.resetFields();
+  formRef.value?.resetFields(); // Element Plus 表单方法，清除所有字段的验证状态
+  // 清空 formData 中的所有字段
   Object.keys(formData).forEach((key) => delete formData[key]);
+  // 将 initialData 的字段重新赋值到 formData
   Object.assign(formData, props.initialData);
 }
 
+/** 提交表单：先执行验证，验证通过后再触发 submit 事件 */
 function handleSubmit() {
+  // formRef.value?.validate() 触发 Element Plus 表单验证
+  // 回调参数 valid 为 true 表示所有规则通过
   formRef.value?.validate((valid) => {
     if (valid) {
+      // 验证通过，将 formData 的浅拷贝发送给父组件
+      // 使用 { ...formData } 避免父组件直接修改子组件内部状态
       emit("submit", { ...formData });
     }
   });
 }
 
+// ─── 向父组件暴露内部方法和属性 ───
+// defineExpose 是 <script setup> 组件暴露内部成员的 API
+// 父组件通过 ref 可以调用这些方法和属性
 defineExpose({ formData, formRef, resetForm });
 </script>
 ```
@@ -1146,6 +1554,7 @@ flowchart TD
 **作用范围：**
 
 错误边界只能捕获子组件渲染阶段的错误，以下类型的错误无法被捕获：
+
 - 事件处理器中的错误（需要 try/catch 手动处理）
 - 异步代码中的错误（如 setTimeout、Promise 回调）
 - 服务端渲染（SSR）中的错误
@@ -1195,57 +1604,97 @@ flowchart TD
 
 ### 5.6 项目实际代码示例
 
-**ErrorBoundary.vue 完整实现：**
+**ErrorBoundary.vue 完整实现（带详细注释）：**
 
 ```vue
 <script setup>
 import { ref, onErrorCaptured } from 'vue'
 
+// ─── Props 定义 ───
 const props = defineProps({
+  // 错误提示文案，默认 "页面出现异常"
   errorMessage: {
     type: String,
     default: '页面出现异常'
   },
+  // 是否显示重试按钮，默认显示
   showRetry: {
     type: Boolean,
     default: true
   },
+  // 是否显示错误详情，默认值取决于环境：开发环境显示，生产环境隐藏
+  // import.meta.env.DEV 在构建时被 Vite 替换为 true/false 字面量
   showDetail: {
     type: Boolean,
     default: import.meta.env.DEV
   }
 })
 
+// ─── Emits 定义 ───
+// 定义组件可以向父组件发送的事件
+// 'error' 事件携带错误详情对象，父组件可通过 @error="handleError" 接收
 const emit = defineEmits(['error'])
 
+// ─── 内部响应式状态 ───
+// hasError：标记是否捕获到错误，true 时显示错误降级 UI
 const hasError = ref(false)
 
+// errorInfo：存储捕获到的错误详情
 const errorInfo = ref({
-  message: '',
-  stack: ''
+  message: '',  // 错误消息
+  stack: ''     // 错误堆栈跟踪
 })
 
+/**
+ * onErrorCaptured：Vue 3 错误捕获生命周期钩子
+ * 当子组件树中发生错误时自动触发
+ *
+ * @param {Error} error - 捕获到的错误对象
+ * @param {ComponentPublicInstance} instance - 触发错误的组件实例
+ * @param {string} info - 错误类型信息，如 "render function"、"mounted hook"
+ *
+ * 关键：返回 false 表示"此错误已被处理"，阻止错误继续向上传播到全局错误处理器
+ */
 onErrorCaptured((error, instance, info) => {
+  // 标记已捕获错误，触发降级 UI 渲染
   hasError.value = true
+
+  // 记录完整的错误信息，包括组件名称和错误类型
   errorInfo.value = {
     message: error.message,
     stack: error.stack,
+    // 获取触发错误的组件名称，用于快速定位问题组件
     component: instance?.$options?.name || 'Anonymous',
-    info
+    info  // 错误发生的阶段信息
   }
 
+  // 向父组件发送错误事件，父组件可据此上报到监控系统
   emit('error', errorInfo.value)
 
+  // 返回 false 阻止错误冒泡到全局错误处理器
+  // 如果不返回 false，Vue 会继续向上传递错误，可能触发 app.config.errorHandler
   return false
 })
 
+/**
+ * 重试按钮点击处理
+ * 重置错误状态，让 Vue 重新渲染默认 slot 中的子组件
+ * 适用于临时性错误（如网络抖动、数据异常）
+ */
 const handleRetry = () => {
   hasError.value = false
   errorInfo.value = { message: '', stack: '' }
 }
 
+/**
+ * 刷新页面按钮点击处理
+ * 调用浏览器原生 API 刷新整个页面
+ * 适用于无法通过重试恢复的错误
+ */
 const handleRefresh = () => {
   window.location.reload()
+}
+</script>
 }
 </script>
 
@@ -1295,10 +1744,10 @@ const handleRefresh = () => {
 </template>
 
 <script setup>
-import ErrorBoundary from '@/components/ErrorBoundary.vue'
+import ErrorBoundary from "@/components/ErrorBoundary.vue";
 
 function handleError(errorInfo) {
-  console.error('组件出错了:', errorInfo)
+  console.error("组件出错了:", errorInfo);
 }
 </script>
 ```
@@ -1358,7 +1807,7 @@ Axios 请求封装是项目前后端通信的基础设施，基于 axios 库进�
 
 **步骤六：响应拦截器实现**
 
-1. 缓存数据直接返回（__fromCache 标记）
+1. 缓存数据直接返回（\_\_fromCache 标记）
 2. 开发环境打印响应日志
 3. 调用 `removePendingRequest` 从队列移除
 4. 调用 `hideLoading` 关闭 Loading
@@ -1522,39 +1971,72 @@ flowchart LR
 
 ### 6.6 项目实际代码示例
 
-**utils/axios.js 核心配置与拦截器：**
+**utils/axios.js 核心配置与拦截器（带详细注释）：**
 
 ```javascript
 import axios from "axios";
 import { ElMessage, ElLoading } from "element-plus";
 import { useUserStore } from "@/stores";
 
-const BASE_URL = "/api";
-const TIMEOUT = 15000;
-const RETRY_COUNT = 2;
-const RETRY_DELAY = 1000;
-const WHITE_LIST = ["/login"];
-const NO_RETRY_METHODS = ["POST", "PUT", "DELETE"];
+// ═══════════════════════════════════════
+// 基础配置常量
+// ═══════════════════════════════════════
+const BASE_URL = "/api"; // API 基础路径，Vite 代理将 /api 转发到后端
+const TIMEOUT = 15000; // 请求超时时间：15 秒
+const RETRY_COUNT = 2; // 最大重试次数：2 次
+const RETRY_DELAY = 1000; // 重试间隔：1000 毫秒（1 秒）
+const WHITE_LIST = ["/login"]; // 白名单：这些接口不需要携带 Token
+const NO_RETRY_METHODS = ["POST", "PUT", "DELETE"]; // 非幂等方法：不重试，防止重复提交
 
+// ═══════════════════════════════════════
+// 请求去重：pendingRequests Map
+// ═══════════════════════════════════════
+// key: "METHOD&url&params&data" 唯一标识
+// value: cancel 函数，调用后可取消该请求
 const pendingRequests = new Map();
-let loadingInstance = null;
-let loadingCount = 0;
 
+// ═══════════════════════════════════════
+// 全局 Loading 管理
+// ═══════════════════════════════════════
+let loadingInstance = null; // ElLoading 实例引用
+let loadingCount = 0; // 引用计数器：并发请求数
+
+// ═══════════════════════════════════════
+// 工具函数
+// ═══════════════════════════════════════
+
+/**
+ * 生成请求唯一标识
+ * 将 method、url、params、data 拼接为字符串作为 key
+ * @param {Object} config - Axios 请求配置对象
+ * @returns {string} 唯一请求标识
+ */
 const generateRequestKey = (config) => {
   const { method, url, params, data } = config;
   return [method, url, JSON.stringify(params), JSON.stringify(data)].join("&");
 };
 
+/**
+ * 添加请求到 pending 队列（请求去重）
+ * 如果已有相同请求正在进行，取消旧请求，用新请求替代
+ * @param {Object} config - Axios 请求配置对象
+ */
 const addPendingRequest = (config) => {
   const key = generateRequestKey(config);
+  // 如果相同 key 的请求已在进行中，调用 cancel 取消旧请求
   if (pendingRequests.has(key)) {
-    pendingRequests.get(key)();
+    pendingRequests.get(key)(); // 执行 cancel 函数
   }
+  // 将新的 cancel 函数存入 Map
   config.cancelToken = new axios.CancelToken((cancel) => {
     pendingRequests.set(key, cancel);
   });
 };
 
+/**
+ * 从 pending 队列移除请求（请求完成后调用）
+ * @param {Object} config - Axios 请求配置对象
+ */
 const removePendingRequest = (config) => {
   const key = generateRequestKey(config);
   if (pendingRequests.has(key)) {
@@ -1562,17 +2044,30 @@ const removePendingRequest = (config) => {
   }
 };
 
+/**
+ * 显示全局 Loading 遮罩
+ * 使用引用计数避免多个请求同时进行时 Loading 闪烁
+ * @param {string} text - Loading 提示文字
+ */
 const showLoading = (text = "加载中...") => {
+  // 只有第一个请求会创建 Loading 实例
   if (loadingCount === 0) {
     loadingInstance = ElLoading.service({
-      lock: true, text, background: "rgba(0, 0, 0, 0.7)",
+      lock: true, // 锁定页面滚动
+      text, // 提示文字
+      background: "rgba(0, 0, 0, 0.7)", // 半透明黑色遮罩
     });
   }
-  loadingCount++;
+  loadingCount++; // 无论是否创建新实例，计数都 +1
 };
 
+/**
+ * 隐藏全局 Loading 遮罩
+ * 最后一个完成的请求才会关闭 Loading
+ */
 const hideLoading = () => {
-  loadingCount--;
+  loadingCount--; // 请求完成，计数 -1
+  // 计数归零时关闭 Loading
   if (loadingCount <= 0) {
     loadingCount = 0;
     if (loadingInstance) {
@@ -1582,70 +2077,105 @@ const hideLoading = () => {
   }
 };
 
-const instance = axios.create({ baseURL: BASE_URL, timeout: TIMEOUT });
+// ═══════════════════════════════════════
+// 创建 Axios 实例
+// ═══════════════════════════════════════
+const instance = axios.create({
+  baseURL: BASE_URL, // 自动在请求 URL 前加上 /api 前缀
+  timeout: TIMEOUT, // 15 秒超时
+});
 
+// ═══════════════════════════════════════
+// 请求拦截器：在请求发送前执行
+// ═══════════════════════════════════════
 instance.interceptors.request.use(
   (config) => {
+    // ── ① 缓存检查：如果是 GET 请求且配置了 cache，优先从缓存读取 ──
     if (config.cache && config.method?.toUpperCase() === "GET") {
       const cacheKey = generateCacheKey(config);
       const cached = getCache(cacheKey);
       if (cached) {
+        // 缓存命中：构造一个类响应对象直接返回，标记 __fromCache
         return Promise.resolve({
-          data: cached, config, status: 200, statusText: "OK",
-          headers: {}, __fromCache: true,
+          data: cached,
+          config,
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          __fromCache: true,
         });
       }
     }
 
+    // ── ② 请求去重：加入 pending 队列 ──
     addPendingRequest(config);
 
+    // ── ③ Token 注入：从 Pinia 获取 Token 并附加到请求头 ──
     const userStore = useUserStore();
     const token = userStore.token;
+    // 有 Token 且不在白名单中时，将 Token 添加到请求头
     if (token && !isInWhiteList(config.url)) {
       config.headers["token"] = token;
     }
 
+    // ── ④ 显示全局 Loading：除非配置 showLoading: false ──
     if (config.showLoading !== false && needLoading(config.url)) {
       showLoading(config.loadingText);
     }
 
-    return config;
+    return config; // 必须返回 config，继续后续处理
   },
+
+  // ── 请求发送失败的错误处理 ──
   (error) => {
-    hideLoading();
-    ElMessage.error("请求发送失败");
-    return Promise.reject(error);
+    hideLoading(); // 隐藏 Loading
+    ElMessage.error("请求发送失败"); // 提示用户
+    return Promise.reject(error); // 将错误向下传递
   }
 );
 
+// ═══════════════════════════════════════
+// 响应拦截器：在收到服务器响应后执行
+// ═══════════════════════════════════════
 instance.interceptors.response.use(
   (response) => {
+    // ── ① 缓存命中直接返回数据 ──
     if (response.__fromCache) return response.data;
 
+    // ── ② 从 pending 队列移除，隐藏 Loading ──
     removePendingRequest(response.config);
     hideLoading();
 
-    const res = response.data;
+    const res = response.data; // 后端返回的业务数据 { code, msg, data }
 
+    // ── ③ 业务成功：code === 1，直接返回完整响应（包含 data） ──
     if (res.code === 1) return res;
 
+    // ── ④ Token 过期：HTTP 401，清除用户数据并跳转登录 ──
     if (res.code === 0 && response.status === 401) {
       const userStore = useUserStore();
-      userStore.clearUserData();
-      ElMessage.error("登录已过期，请重新登录");
-      window.location.href = "/login";
+      userStore.clearUserData(); // 清除 token、userInfo 等
+      const errorMsg = "登录已过期，请重新登录";
+      ElMessage.error(errorMsg);
+      window.location.href = "/login"; // 强制跳转
       return Promise.reject(new Error(errorMsg));
     }
 
+    // ── ⑤ 业务失败：code !== 1 且非 401，提示错误信息 ──
     ElMessage.error(res.msg || "操作失败");
     return Promise.reject(new Error(res.msg || "操作失败"));
   },
+
+  // ── 响应错误的处理 ──
   async (error) => {
+    // 从 pending 队列移除（如果配置存在）
     if (error.config) removePendingRequest(error.config);
     hideLoading();
 
+    // 如果是被取消的请求（去重机制），静默处理不提示
     if (axios.isCancel(error)) return Promise.reject(error);
 
+    // ── ① HTTP 401 错误：Token 过期 ──
     if (error.response?.status === 401) {
       const userStore = useUserStore();
       userStore.clearUserData();
@@ -1654,78 +2184,120 @@ instance.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // ── ② 自动重试：仅对 GET 等幂等请求，且是网络超时/错误时 ──
     const config = error.config;
     if (
-      config && shouldRetry(config.method) && !config._retryCount &&
-      (error.code === "ECONNABORTED" || error.message.includes("Network Error"))
+      config && // 请求配置存在
+      shouldRetry(config.method) && // 是允许重试的方法（GET）
+      !config._retryCount && // 尚未标记重试（首次进入时 _retryCount 为 undefined）
+      (error.code === "ECONNABORTED" || // 超时错误
+        error.message.includes("Network Error")) // 网络错误
     ) {
-      config._retryCount = config._retryCount || 0;
+      config._retryCount = config._retryCount || 0; // 初始化重试计数
       if (config._retryCount < RETRY_COUNT) {
-        config._retryCount++;
+        config._retryCount++; // 重试计数 +1
+        // 延迟 RETRY_DELAY 毫秒后重试
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-        return instance.request(config);
+        return instance.request(config); // 重新发起请求
       }
     }
 
+    // ── ③ 其他错误：显示友好的错误信息 ──
     ElMessage.error(getErrorMessage(error));
     return Promise.reject(error);
   }
 );
 
-export default instance;
+export default instance; // 导出封装后的 axios 实例
 ```
 
-**请求缓存与取消的工具函数：**
+**请求缓存与取消的工具函数（带详细注释）：**
 
 ```javascript
+// ═══════════════════════════════════════
+// 请求缓存：使用 Map 存储 GET 请求的响应结果
+// ═══════════════════════════════════════
 const requestCache = new Map();
-const CACHE_MAX_AGE = 5 * 60 * 1000;
-const CACHE_MAX_SIZE = 200;
+const CACHE_MAX_AGE = 5 * 60 * 1000; // 缓存过期时间：5 分钟（5 × 60 × 1000 毫秒）
+const CACHE_MAX_SIZE = 200; // 最大缓存数量：200 条，超出时 FIFO 淘汰
 
+/**
+ * 生成缓存键
+ * 将 method、url、params 排序后拼接为唯一字符串
+ * 注意：params 按键名排序，确保 {a:1,b:2} 和 {b:2,a:1} 生成相同键
+ * @param {Object} config - Axios 请求配置
+ * @returns {string} 缓存键
+ */
 function generateCacheKey(config) {
   const { method, url, params } = config;
   const sortedParams = params
     ? Object.keys(params)
-        .sort()
+        .sort() // 按键名升序排序
         .reduce((acc, key) => {
+          // 重组为有序对象
           acc[key] = params[key];
           return acc;
         }, {})
     : {};
+  // 拼接为 "METHOD&url&params" 格式
   return `${method?.toUpperCase()}&${url}&${JSON.stringify(sortedParams)}`;
 }
 
+/**
+ * 从缓存读取数据
+ * 如果缓存不存在或已过期，返回 null
+ * @param {string} key - 缓存键
+ * @returns {any|null} 缓存数据或 null
+ */
 function getCache(key) {
   const item = requestCache.get(key);
-  if (!item) return null;
+  if (!item) return null; // 缓存不存在
+  // 检查是否过期：当前时间 - 缓存时间 > 最大存活时间
   if (Date.now() - item.timestamp > CACHE_MAX_AGE) {
-    requestCache.delete(key);
+    requestCache.delete(key); // 过期数据自动删除
     return null;
   }
-  return item.data;
+  return item.data; // 返回缓存数据
 }
 
+/**
+ * 写入缓存
+ * 如果缓存已满，使用 FIFO 策略删除最早的一条
+ * @param {string} key - 缓存键
+ * @param {any} data - 要缓存的数据
+ */
 function setCache(key, data) {
   if (requestCache.size >= CACHE_MAX_SIZE) {
+    // Map.keys().next().value 获取第一个插入的 key（FIFO）
     const firstKey = requestCache.keys().next().value;
-    if (firstKey) requestCache.delete(firstKey);
+    if (firstKey) requestCache.delete(firstKey); // 删除最早的缓存
   }
+  // 写入新缓存，附带时间戳
   requestCache.set(key, { data, timestamp: Date.now() });
 }
 
+/**
+ * 按模式清除缓存
+ * @param {string} [pattern] - 缓存键匹配模式，不传则清空全部
+ */
 export function clearCache(pattern) {
   if (!pattern) {
-    requestCache.clear();
+    requestCache.clear(); // 清空全部缓存
     return;
   }
+  // 遍历所有缓存键，删除包含 pattern 的项
   for (const key of requestCache.keys()) {
     if (key.includes(pattern)) requestCache.delete(key);
   }
 }
 
+/**
+ * 取消所有待处理的请求（路由切换时调用）
+ * 遍历 pendingRequests Map，调用每个 cancel 函数取消对应请求
+ */
 export const cancelAllRequests = () => {
-  pendingRequests.forEach((cancel) => cancel());
-  pendingRequests.clear();
+  pendingRequests.forEach((cancel) => cancel()); // 取消所有 pending 请求
+  pendingRequests.clear(); // 清空队列
 };
 ```
 
@@ -1775,6 +2347,7 @@ Git 工作流与代码规范是现代前端工程化体系的基石，它通过�
 Husky 是一个 Git 钩子管理工具，它让 Git 钩子的配置变得简单且可共享。通过在 `package.json` 中定义 `prepare` 脚本，确保每位开发者在安装依赖时自动初始化 Git 钩子。
 
 相关命令：
+
 - `npm install husky --save-dev` — 安装 Husky
 - `npm pkg set scripts.prepare="husky"` — 设置 prepare 脚本
 - `npx husky init` — 初始化 Husky 配置
@@ -1857,7 +2430,7 @@ ESLint 配置采用了"基础规则 + 类型特定规则"的双层结构：
 
 #### commitlint 的规范化价值
 
-commitlint  enforcing Conventional Commits 规范带来的长期收益：
+commitlint enforcing Conventional Commits 规范带来的长期收益：
 
 - **自动化发布**：可基于提交类型自动生成语义化版本号
 - **变更日志**：可自动生成 CHANGELOG.md
@@ -1881,7 +2454,7 @@ sequenceDiagram
     Husky->>LS: 执行 lint-staged
     LS->>Git: git diff --staged 获取暂存文件列表
     Git-->>LS: 返回暂存文件路径数组
-    
+
     loop 遍历每个暂存文件
         alt JS/TS/Vue 文件
             LS->>ESLint: eslint --fix <file>
@@ -1893,18 +2466,18 @@ sequenceDiagram
             Prettier-->>LS: 返回格式化结果
         end
     end
-    
+
     alt 所有检查通过
         LS->>Git: git add 重新暂存修复后的文件
         LS-->>Husky: 退出码 0
         Husky-->>Git: pre-commit 通过
         Git->>Dev: 打开编辑器/接受提交信息
-        
+
         Git->>Husky: 触发 commit-msg 钩子
         Husky->>CL: commitlint --edit $1
         CL->>CL: 解析提交信息
         CL->>CL: 校验 type-enum / subject-length
-        
+
         alt 提交信息合规
             CL-->>Husky: 退出码 0
             Husky-->>Git: commit-msg 通过
@@ -1923,153 +2496,161 @@ sequenceDiagram
 
 ### 1.6 项目实际代码示例
 
-#### 1.6.1 Husky pre-commit 钩子
+**Husky pre-commit 钩子（带详细注释）：**
 
-文件路径：`/workspace/.husky/pre-commit`
+文件路径：`.husky/pre-commit`
 
 ```shell
+# pre-commit 钩子：在 git commit 执行前触发
+# npx lint-staged：对暂存区的文件运行 lint-staged 配置的检查命令
+# lint-staged 会根据 .lintstagedrc.json 中的配置，对不同文件类型执行 ESLint/Prettier
+# 如果检查不通过，git commit 将被中止
 npx lint-staged
 ```
 
-这是 pre-commit 钩子的核心实现，仅一行命令却串联起整个代码质量检查流程。每次执行 `git commit` 时，Husky 会自动执行该脚本。
+**Husky commit-msg 钩子（带详细注释）：**
 
-#### 1.6.2 Husky commit-msg 钩子
-
-文件路径：`/workspace/.husky/commit-msg`
+文件路径：`.husky/commit-msg`
 
 ```shell
+# commit-msg 钩子：在用户输入提交信息后触发
+# --no：告诉 npx 不使用全局安装的 commitlint，而是使用项目本地的
+# --：分隔 npx 参数和 commitlint 参数
+# commitlint --edit "$1"：读取 Git 传递的提交信息文件（"$1" 是临时文件路径）进行校验
+# 提交信息必须符合 Conventional Commits 规范，否则 commit 被中止
 npx --no -- commitlint --edit "$1"
 ```
 
-`--no` 参数确保 commitlint 使用本地项目安装的版本而非全局版本，`--edit "$1"` 表示读取 Git 传递的提交信息文件进行校验。
+**lint-staged 配置（带详细注释）：**
 
-#### 1.6.3 lint-staged 配置
-
-文件路径：`/workspace/.lintstagedrc.json`
+文件路径：`.lintstagedrc.json`
 
 ```json
 {
+  // 键：glob 通配符模式，匹配需要检查的文件
+  // 值：该模式匹配文件需要依次执行的命令数组
+
+  // 对 JS/TS/Vue 文件：先 ESLint 自动修复语法问题，再 Prettier 统一格式
+  // 注意顺序：先 ESLint 修复语法，再 Prettier 格式化，否则 Prettier 可能破坏 ESLint 的修复
   "*.{js,jsx,ts,tsx,vue}": ["eslint --fix", "prettier --write"],
+
+  // 对 JSON/Markdown/HTML/CSS 文件：仅 Prettier 格式化
+  // 这些文件格式简单，不需要 ESLint 检查
   "*.{json,md,html,css,scss}": ["prettier --write"]
 }
 ```
 
-配置采用对象格式，键为 glob 模式，值为该模式匹配文件需要依次执行的命令数组。注意命令执行顺序很重要：先 ESLint 修复语法问题，再 Prettier 统一格式。
+**commitlint 配置（带详细注释）：**
 
-#### 1.6.4 commitlint 配置
-
-文件路径：`/workspace/commitlint.config.cjs`
+文件路径：`commitlint.config.cjs`
 
 ```javascript
 module.exports = {
-  extends: ['@commitlint/config-conventional'],
+  // extends：继承 @commitlint/config-conventional 预设规则
+  // 这是 Conventional Commits 规范的官方配置，定义了 type/description/scope 等规则
+  extends: ["@commitlint/config-conventional"],
+
   rules: {
-    'type-enum': [
-      2,
-      'always',
+    // type-enum：提交类型必须在指定枚举列表中
+    // 三元组格式：[级别, 适用条件, 配置值]
+    // 级别 2 = 错误（不通过则阻止提交），1 = 警告，0 = 禁用
+    "type-enum": [
+      2, // 级别：错误
+      "always", // 适用条件：总是检查
       [
-        'feat',
-        'fix',
-        'docs',
-        'style',
-        'refactor',
-        'perf',
-        'test',
-        'chore',
-        'revert',
-        'build',
-        'ci'
-      ]
+        // 允许的 type 值列表
+        "feat", // 新功能
+        "fix", // 修复 bug
+        "docs", // 文档变更
+        "style", // 代码格式（不影响逻辑）
+        "refactor", // 重构（既不新增功能也不修复 bug）
+        "perf", // 性能优化
+        "test", // 测试相关
+        "chore", // 构建过程/辅助工具变动
+        "revert", // 回滚提交
+        "build", // 构建系统或依赖变动
+        "ci", // CI/CD 配置变动
+      ],
     ],
-    'subject-case': [0],
-    'subject-max-length': [2, 'always', 100]
-  }
-}
+
+    // subject-case：描述大小写规则
+    // 级别 0 = 禁用（不检查大小写）
+    "subject-case": [0],
+
+    // subject-max-length：描述最大长度
+    // 级别 2 = 错误，always = 总是检查，100 = 最大 100 字符
+    "subject-max-length": [2, "always", 100],
+  },
+};
 ```
 
-规则配置采用 `[级别, 适用条件, 配置值]` 的三元组格式：
-- 级别：`0` = 禁用，`1` = 警告，`2` = 错误
-- 适用条件：`always` | `never`
-- 配置值：规则的具体参数
+**ESLint 配置（带详细注释）：**
 
-#### 1.6.5 ESLint 配置
-
-文件路径：`/workspace/.eslintrc.cjs`
+文件路径：`.eslintrc.cjs`
 
 ```javascript
 /* eslint-env node */
-require('@rushstack/eslint-patch/modern-module-resolution')
+// 声明此文件运行在 Node.js 环境中，禁用浏览器全局变量警告
+// require：加载 Rushstack 提供的模块解析补丁
+// 解决 ESLint 在扁平化依赖结构中找不到插件的问题
+require("@rushstack/eslint-patch/modern-module-resolution");
 
 module.exports = {
+  // root: true 告诉 ESLint 停止在父目录中查找配置文件
   root: true,
+
+  // env：声明代码运行的环境（影响全局变量的可用性）
   env: {
-    browser: true,
-    node: true,
-    es2021: true
+    browser: true, // 浏览器全局变量（window, document 等）可用
+    node: true, // Node.js 全局变量（process, require 等）可用
+    es2021: true, // ES2021 全局 API（Promise.allSettled 等）可用
   },
+
+  // extends：继承的规则配置列表，按顺序合并
   extends: [
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-prettier'
+    "plugin:vue/vue3-essential", // Vue 3 必要规则（如模板语法）
+    "eslint:recommended", // ESLint 推荐规则
+    "@vue/eslint-config-prettier", // 关闭与 Prettier 冲突的 ESLint 规则
   ],
+
+  // parserOptions：解析器配置
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module'
+    ecmaVersion: "latest", // 使用最新的 ECMAScript 语法
+    sourceType: "module", // 使用 ES 模块语法（import/export）
   },
+
+  // overrides：针对特定文件的额外规则覆盖
   overrides: [
     {
-      files: ['*.ts', '*.tsx', '*.vue'],
-      parser: 'vue-eslint-parser',
+      // 对 TypeScript 文件和 Vue 文件应用额外规则
+      files: ["*.ts", "*.tsx", "*.vue"],
+      // vue-eslint-parser：Vue SFC 的解析器，支持 <script setup> 语法
+      parser: "vue-eslint-parser",
       parserOptions: {
-        parser: '@typescript-eslint/parser',
-        ecmaVersion: 'latest',
-        sourceType: 'module'
+        parser: "@typescript-eslint/parser", // 使用 TS 解析器
+        ecmaVersion: "latest",
+        sourceType: "module",
       },
-      extends: [
-        'plugin:@typescript-eslint/recommended'
-      ],
+      // 额外继承 TypeScript 推荐规则
+      extends: ["plugin:@typescript-eslint/recommended"],
+      // 针对 TypeScript 文件的规则调整
       rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': 'off',
-        '@typescript-eslint/no-empty-object-type': 'off',
-        'vue/multi-word-component-names': 'off'
-      }
-    }
+        "@typescript-eslint/no-explicit-any": "off", // 允许使用 any 类型
+        "@typescript-eslint/no-unused-vars": "off", // 不检查未使用的变量
+        "@typescript-eslint/no-empty-object-type": "off", // 允许空对象类型 {}
+        "vue/multi-word-component-names": "off", // 允许单词组件名（如 App.vue）
+      },
+    },
   ],
+
+  // 全局规则调整
   rules: {
-    'vue/multi-word-component-names': 'off',
-    'no-unused-vars': 'off',
-    'no-undef': 'off'
-  }
-}
-```
-
-`@rushstack/eslint-patch/modern-module-resolution` 补丁解决了 ESLint 在 monorepo 或扁平化依赖结构中模块解析的问题，确保插件能够正确加载。
-
-#### 1.6.6 package.json 相关脚本
-
-文件路径：`/workspace/package.json`
-
-```json
-{
-  "scripts": {
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx --fix --ignore-path .gitignore",
-    "prepare": "husky",
-    "commit": "git-cz"
+    "vue/multi-word-component-names": "off", // 允许单词组件名
+    "no-unused-vars": "off", // 不检查未使用的变量
+    "no-undef": "off", // 不检查未定义变量（TS 已处理）
   },
-  "devDependencies": {
-    "@commitlint/cli": "^21.2.0",
-    "@commitlint/config-conventional": "^21.2.0",
-    "eslint": "^8.22.0",
-    "eslint-plugin-vue": "^9.3.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^17.0.8",
-    "prettier": "^2.7.1"
-  }
-}
+};
 ```
-
-`prepare` 脚本是 npm 的生命周期钩子，在 `npm install` 完成后自动执行，确保每位团队成员都能自动启用 Git 钩子，无需额外手动配置。
 
 ---
 
@@ -2103,6 +2684,7 @@ Vite 规定，只有以 `VITE_` 前缀开头的环境变量才会被注入到客
 **步骤三：定义统一的环境变量键**
 
 四个环境文件保持完全相同的键名结构，仅值不同，确保代码中引用时无需关心当前运行环境。统一的键包括：
+
 - `VITE_APP_TITLE` — 应用标题
 - `VITE_API_BASE_URL` — API 基础路径
 - `VITE_APP_ENV` — 环境标识
@@ -2135,12 +2717,12 @@ flowchart TD
     D -->|test| F[加载 .env.test]
     D -->|staging| G[加载 .env.staging]
     D -->|production| H[加载 .env.production]
-    
+
     E --> I[合并默认 .env 文件（如果有）]
     F --> I
     G --> I
     H --> I
-    
+
     I --> J[执行 vite.config.ts 配置函数]
     J --> K[loadEnv(mode, cwd, '') 加载环境变量]
     K --> L[计算 isProd = mode === 'production']
@@ -2173,6 +2755,7 @@ Vite 的环境变量加载遵循以下优先级规则（后者覆盖前者）：
 #### 构建模式与环境的对应关系
 
 Vite 有三个**内置模式**：
+
 - `development` — `vite` 开发服务器使用的模式
 - `production` — `vite build` 默认使用的模式
 - `test` — Vitest 使用的模式（本项目未使用）
@@ -2195,6 +2778,7 @@ define: {
 ```
 
 这些常量的特点：
+
 - 在代码中直接以全局变量形式使用，如 `console.log(__BUILD_VERSION__)`
 - 构建时被替换为字面量值，不是运行时变量
 - 必须使用 `JSON.stringify` 包裹字符串值，确保生成的是合法的 JS 字面量
@@ -2204,14 +2788,15 @@ define: {
 
 分析四个环境文件，可以看出清晰的差异化配置策略：
 
-| 配置项 | development | test | staging | production |
-|-------|-------------|------|---------|------------|
-| VITE_APP_ENV | development | test | staging | production |
-| VITE_ENABLE_DEVTOOLS | true | true | false | false |
-| VITE_ENABLE_MOCK | false | false | false | false |
-| VITE_API_BASE_URL | /api | /api | /api | /api |
+| 配置项               | development | test  | staging | production |
+| -------------------- | ----------- | ----- | ------- | ---------- |
+| VITE_APP_ENV         | development | test  | staging | production |
+| VITE_ENABLE_DEVTOOLS | true        | true  | false   | false      |
+| VITE_ENABLE_MOCK     | false       | false | false   | false      |
+| VITE_API_BASE_URL    | /api        | /api  | /api    | /api       |
 
 策略分析：
+
 - **DevTools 开关**：开发和测试环境开启，便于调试；预发布和生产环境关闭，避免性能损耗和信息泄露
 - **Mock 开关**：四个环境均关闭，表明项目采用真实后端对接策略
 - **API 路径**：均使用 `/api` 相对路径，结合 Nginx 反向代理或 Vite 代理实现跨环境部署
@@ -2232,22 +2817,22 @@ sequenceDiagram
     NPM->>Vite: vue-tsc --noEmit && vite build --mode staging
     Vite->>EnvFile: 读取 .env.staging
     EnvFile-->>Vite: 返回环境变量键值对
-    
+
     Vite->>Config: 调用 defineConfig 函数，传入 mode=staging
     Config->>Config: loadEnv('staging', cwd, '')
     Config->>Config: 计算 isProd = false
     Config->>Config: 生成 buildTime/buildVersion/buildEnv
     Config->>Config: 组装 plugins/define/build 配置
     Config-->>Vite: 返回完整配置对象
-    
+
     Vite->>Code: 开始模块解析和转换
     Code->>Code: 遇到 import.meta.env.VITE_XXX → 替换为值
     Code->>Code: 遇到 __BUILD_TIME__ 等全局常量 → 静态替换
-    
+
     Vite->>Vite: Rollup 打包优化
     Vite->>Output: 输出 dist/ 目录
     Output-->>Dev: 构建完成
-    
+
     Note over Dev,Output: 运行时数据流
     Dev->>Output: 部署到服务器
     Output->>Browser: 用户浏览器加载资源
@@ -2258,16 +2843,22 @@ sequenceDiagram
 
 ### 2.6 项目实际代码示例
 
-#### 2.6.1 开发环境配置
+**开发环境配置（带详细注释）：**
 
-文件路径：`/workspace/.env.development`
+文件路径：`.env.development`
 
 ```
+# 应用标题 — 显示在浏览器标签页和页面头部
 VITE_APP_TITLE=Tlias 智能学习辅助系统
+# API 基础路径 — 使用相对路径，开发时由 Vite 代理转发到后端
 VITE_API_BASE_URL=/api
+# 环境标识 — 告知应用当前运行在开发环境
 VITE_APP_ENV=development
+# 应用版本号 — 用于构建信息展示和版本追踪
 VITE_APP_VERSION=1.0.0
+# Mock 数据开关 — false 表示使用真实后端
 VITE_ENABLE_MOCK=false
+# DevTools 开关 — true 开启浏览器调试工具
 VITE_ENABLE_DEVTOOLS=true
 ```
 
@@ -2275,7 +2866,9 @@ VITE_ENABLE_DEVTOOLS=true
 
 #### 2.6.2 生产环境配置
 
-文件路径：`/workspace/.env.production`
+**生产环境配置（带详细注释）：**
+
+文件路径：`.env.production`
 
 ```
 VITE_APP_TITLE=Tlias 智能学习辅助系统
@@ -2283,6 +2876,7 @@ VITE_API_BASE_URL=/api
 VITE_APP_ENV=production
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_MOCK=false
+# 生产环境关闭 DevTools，避免暴露内部状态和调试信息
 VITE_ENABLE_DEVTOOLS=false
 ```
 
@@ -2290,7 +2884,9 @@ VITE_ENABLE_DEVTOOLS=false
 
 #### 2.6.3 测试环境配置
 
-文件路径：`/workspace/.env.test`
+**测试环境配置（带详细注释）：**
+
+文件路径：`.env.test`
 
 ```
 VITE_APP_TITLE=Tlias 智能学习辅助系统
@@ -2298,6 +2894,7 @@ VITE_API_BASE_URL=/api
 VITE_APP_ENV=test
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_MOCK=false
+# 测试环境开启 DevTools，方便测试人员定位问题
 VITE_ENABLE_DEVTOOLS=true
 ```
 
@@ -2305,7 +2902,9 @@ VITE_ENABLE_DEVTOOLS=true
 
 #### 2.6.4 预发布环境配置
 
-文件路径：`/workspace/.env.staging`
+**预发布环境配置（带详细注释）：**
+
+文件路径：`.env.staging`
 
 ```
 VITE_APP_TITLE=Tlias 智能学习辅助系统
@@ -2313,34 +2912,51 @@ VITE_API_BASE_URL=/api
 VITE_APP_ENV=staging
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_MOCK=false
+# 预发布环境与生产环境一致（关闭 DevTools），用于上线前最终验证
 VITE_ENABLE_DEVTOOLS=false
 ```
 
 预发布环境配置与生产环境完全一致（关闭 DevTools），用于模拟生产环境进行最终验证，确保上线前的质量。
 
-#### 2.6.5 Vite 配置中的环境变量处理
+**Vite 配置中的环境变量处理（带详细注释）：**
 
-文件路径：`/workspace/vite.config.ts`
+文件路径：`vite.config.ts`
 
 ```typescript
 import { defineConfig, loadEnv } from "vite";
 
+// defineConfig 接受一个函数，参数中的 mode 表示当前构建模式
 export default defineConfig(({ mode }) => {
+  // loadEnv：从 .env 文件中加载环境变量
+  // mode：当前构建模式，决定加载哪个 .env.{mode} 文件
+  // process.cwd()：当前工作目录
+  // ""：第三个参数是前缀过滤，空字符串表示加载所有变量
   const env = loadEnv(mode, process.cwd(), "");
+
+  // isProd：判断是否为生产环境构建
+  // 仅 mode === "production" 时为 true
   const isProd = mode === "production";
 
+  // 构建时间戳：ISO 8601 格式
   const buildTime = new Date().toISOString();
+  // 版本号：从环境变量读取，默认 "1.0.0"
   const buildVersion = env.VITE_APP_VERSION || "1.0.0";
+  // 构建模式：即 mode 参数本身
   const buildEnv = mode;
 
   return {
+    // define：将值作为全局常量注入到客户端代码中
+    // 构建时，代码中的 __APP_ENV__ 等会被替换为实际的字符串字面量
     define: {
+      // JSON.stringify 确保字符串值被替换为带引号的字面量
       __APP_ENV__: JSON.stringify(env.VITE_APP_ENV),
       __BUILD_TIME__: JSON.stringify(buildTime),
       __BUILD_VERSION__: JSON.stringify(buildVersion),
       __BUILD_ENV__: JSON.stringify(buildEnv),
     },
     build: {
+      // sourcemap：是否生成 Source Map
+      // 非生产环境生成 sourcemap 便于调试，生产环境不生成以保护源码
       sourcemap: !isProd,
     },
     // ... 其他配置
@@ -2349,29 +2965,42 @@ export default defineConfig(({ mode }) => {
 ```
 
 关键实现细节：
+
 - `loadEnv` 的第三个参数为空字符串，加载所有变量（包括非 `VITE_` 前缀的）
 - `isProd` 仅在 `mode === "production"` 时为真，staging 模式不开启生产级别构建优化
 - `sourcemap` 根据环境动态开关：非生产环境生成 sourcemap 便于调试，生产环境不生成以保护源码
 
 #### 2.6.6 package.json 多环境构建脚本
 
-文件路径：`/workspace/package.json`
+**package.json 多环境构建脚本（带详细注释）：**
+
+文件路径：`package.json`
 
 ```json
 {
   "scripts": {
+    // 启动开发服务器：等价于 vite --mode development
     "dev": "vite",
+
+    // 默认构建：先类型检查，再构建生产版本
     "build": "vue-tsc --noEmit && vite build",
+
+    // 开发环境构建：--mode development 加载 .env.development
     "build:dev": "vue-tsc --noEmit && vite build --mode development",
+    // 测试环境构建：--mode test 加载 .env.test
     "build:test": "vue-tsc --noEmit && vite build --mode test",
+    // 预发布环境构建：--mode staging 加载 .env.staging
     "build:staging": "vue-tsc --noEmit && vite build --mode staging",
+    // 生产环境构建：--mode production 加载 .env.production
     "build:prod": "vue-tsc --noEmit && vite build --mode production",
+
+    // 本地预览生产构建产物：在 http://localhost:4173 上预览
     "preview": "vite preview --port 4173"
   }
 }
 ```
 
-脚本命名采用 `build:<环境>` 的统一约定，便于记忆和自动补全。每个构建命令前都执行 `vue-tsc --noEmit` 进行类型检查，确保构建产物的类型正确性。
+脚本命名采用 `build:<环境>` 的统一约定，便于记忆和自动补全。每个构建命令前都执行 `vue-tsc --noEmit` 进行类型检查，确保构建产物的类型正确性。`vue-tsc` 是 TypeScript 的 Vue 扩展版本检查工具，`--noEmit` 表示只做类型检查不输出文件。
 
 ---
 
@@ -2392,6 +3021,7 @@ export default defineConfig(({ mode }) => {
 **步骤一：配置手动分包策略**
 
 在 `rollupOptions.output.manualChunks` 中定义分包规则，将第三方依赖按功能模块拆分为独立的 chunk 文件。本项目将依赖分为四个包：
+
 - `vue` — Vue 核心生态（vue、vue-router、pinia）
 - `elementPlus` — UI 组件库（element-plus、@element-plus/icons-vue）
 - `echarts` — 图表库（echarts、vue-echarts）
@@ -2435,13 +3065,13 @@ flowchart TD
     C -->|否| E[启用 sourcemap]
     D --> F[ESBuild 压缩代码]
     E --> F
-    
+
     F --> G[Rollup 开始打包]
     G --> H[解析入口模块和依赖关系]
     H --> I[按 manualChunks 规则拆分第三方依赖]
     I --> J[按路由拆分业务代码 chunk]
     J --> K[CSS 代码分割 cssCodeSplit]
-    
+
     K --> L[生成带 hash 的文件名]
     L --> M[输出到 assets/js/ 和 assets/css/ 等目录]
     M --> N{文件 > 10KB?}
@@ -2449,7 +3079,7 @@ flowchart TD
     N -->|否| P[跳过压缩]
     O --> Q[计算 chunk 总大小]
     P --> Q
-    
+
     Q --> R{chunk > 1000KB?}
     R -->|是| S[输出警告提示]
     R -->|否| T[构建完成]
@@ -2478,6 +3108,7 @@ flowchart TD
 **3. 体积预警与边界控制**
 
 `chunkSizeWarningLimit: 1000` 的设置是一个重要的质量门禁。当单个 chunk 超过 1000KB 时，Vite 会输出警告。这并非硬性限制，而是提醒开发者审视是否有进一步优化空间，例如：
+
 - 是否引入了不必要的依赖
 - 是否可以改用按需引入
 - 是否可以进一步拆分模块
@@ -2486,12 +3117,12 @@ flowchart TD
 
 `vite-plugin-compression` 的配置参数经过精心权衡：
 
-| 参数 | 值 | 含义 | 设计考量 |
-|------|----|------|---------|
+| 参数      | 值    | 含义            | 设计考量                                    |
+| --------- | ----- | --------------- | ------------------------------------------- |
 | threshold | 10240 | 10KB 以上才压缩 | 小文件压缩后体积减少有限，且解压有 CPU 开销 |
-| algorithm | gzip | 使用 Gzip 算法 | 兼容性最好，所有浏览器都支持 |
-| ext | .gz | 压缩文件后缀 | 标准命名，便于 Nginx 等服务器识别 |
-| disable | false | 启用压缩 | 可通过环境变量动态控制 |
+| algorithm | gzip  | 使用 Gzip 算法  | 兼容性最好，所有浏览器都支持                |
+| ext       | .gz   | 压缩文件后缀    | 标准命名，便于 Nginx 等服务器识别           |
+| disable   | false | 启用压缩        | 可通过环境变量动态控制                      |
 
 Gzip 压缩通常能将文本资源（JS/CSS/HTML）压缩至原大小的 30%-40%，对于中大型应用，这意味着数百 KB 的流量节省。需要注意的是，Gzip 需要服务器端配合（Nginx 的 `gzip_static` 模块）才能生效，否则即使生成了 `.gz` 文件也不会被使用。
 
@@ -2504,6 +3135,7 @@ Gzip 压缩通常能将文本资源（JS/CSS/HTML）压缩至原大小的 30%-40
 - **目录分层**：JS 文件放入 `assets/js/`，资源文件按扩展名分目录
 
 这种命名策略配合 HTTP 强缓存（Cache-Control: max-age=31536000）可以实现：
+
 - 首次访问：下载所有资源
 - 后续访问：未变更的资源直接从缓存读取（0 网络请求）
 - 版本更新：只有变更的文件哈希变化，用户只需下载变更部分
@@ -2533,29 +3165,29 @@ sequenceDiagram
     Vite->>Vite: 解析模块依赖图
     Vite->>Vite: 按 manualChunks 拆分 vendor
     Vite->>Vite: 按路由拆分业务代码
-    
+
     Vite->>ESBuild: 传递所有 JS chunk
     ESBuild->>ESBuild: 压缩和混淆
     ESBuild-->>Vite: 返回压缩后的代码
-    
+
     Vite->>Vite: CSS 提取与分割
     Vite->>Vite: 生成 content hash 文件名
     Vite->>Disk: 写入 JS/CSS/图片等资源文件
-    
+
     alt 生产环境
         Vite->>Plugin: 触发生成钩子
         Plugin->>Disk: 读取 >10KB 的文件
         Plugin->>Plugin: Gzip 压缩
         Plugin->>Disk: 写入 .gz 压缩文件
     end
-    
+
     Note over Browser,Server: 运行阶段
     Browser->>Server: 请求 index.html
     Server-->>Browser: 返回 HTML (no-cache)
-    
+
     Browser->>Browser: 解析 HTML 中的资源引用
     Browser->>Browser: 检查本地缓存
-    
+
     alt 缓存命中
         Browser->>Browser: 直接使用缓存资源
     else 缓存未命中
@@ -2569,15 +3201,15 @@ sequenceDiagram
         Browser->>Browser: 解压 (如果是 gzip)
         Browser->>Browser: 缓存资源供下次使用
     end
-    
+
     Browser->>Browser: 执行 JS, 渲染页面
 ```
 
 ### 3.6 项目实际代码示例
 
-#### 3.6.1 Vite 构建优化配置
+**Vite 构建优化配置（带详细注释）：**
 
-文件路径：`/workspace/vite.config.ts`
+文件路径：`vite.config.ts`
 
 ```typescript
 import { defineConfig, loadEnv } from "vite";
@@ -2588,51 +3220,73 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const isProd = mode === "production";
 
+  // plugins：Vite 插件数组
   const plugins: any[] = [vue()];
 
+  // 仅在生产环境启用 Gzip 压缩插件
+  // 开发环境不需要压缩，会拖慢热更新速度
   if (isProd) {
     plugins.push(
       viteCompression({
-        verbose: true,
-        disable: false,
-        threshold: 10240,
-        algorithm: "gzip",
-        ext: ".gz",
+        verbose: true, // 在控制台输出压缩日志
+        disable: false, // 启用压缩（可通过环境变量动态关闭）
+        threshold: 10240, // 仅压缩超过 10KB 的文件
+        algorithm: "gzip", // 使用 Gzip 算法
+        ext: ".gz", // 压缩文件后缀名
       })
     );
   }
 
   return {
     plugins,
+    // resolve.alias：配置路径别名，"@" 指向 "src/" 目录
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
+    // define：构建时全局常量注入
     define: {
       __APP_ENV__: JSON.stringify(env.VITE_APP_ENV),
       __BUILD_TIME__: JSON.stringify(buildTime),
       __BUILD_VERSION__: JSON.stringify(buildVersion),
       __BUILD_ENV__: JSON.stringify(buildEnv),
     },
+    // build：构建优化配置
     build: {
+      // target：编译目标为最新的 ES 语法，不做降级编译
       target: "esnext",
+      // sourcemap：非生产环境生成 Source Map 便于调试
       sourcemap: !isProd,
+      // minify：使用 ESBuild 进行代码压缩（比 Terser 快 10-100 倍）
       minify: "esbuild",
+      // cssCodeSplit：启用 CSS 代码分割
       cssCodeSplit: true,
+      // rollupOptions：传递给底层 Rollup 打包器的配置
       rollupOptions: {
         output: {
+          // chunk 文件名模板：带内容哈希，实现精确缓存
           chunkFileNames: "assets/js/[name]-[hash].js",
+          // 入口文件名模板：带内容哈希
           entryFileNames: "assets/js/[name]-[hash].js",
+          // 静态资源文件名模板：按扩展名分类存放
           assetFileNames: "assets/[ext]/[name]-[hash].[ext]",
+          // manualChunks：手动分包策略
+          // 将第三方依赖按功能拆分为独立的 chunk 文件
+          // 业务代码更新时，第三方依赖可继续使用浏览器缓存
           manualChunks: {
+            // Vue 核心生态：框架 + 路由 + 状态管理
             vue: ["vue", "vue-router", "pinia"],
+            // Element Plus UI 组件库及其图标
             elementPlus: ["element-plus", "@element-plus/icons-vue"],
+            // ECharts 图表库及其 Vue 封装
             echarts: ["echarts", "vue-echarts"],
+            // 国际化库
             i18n: ["vue-i18n"],
           },
         },
       },
+      // chunkSizeWarningLimit：单个 chunk 大小警告阈值（单位 KB）
       chunkSizeWarningLimit: 1000,
     },
   };
@@ -2740,18 +3394,33 @@ dist/
 
 ---
 
-# 阶段三（体验与性能P2）深度分析文档
+## 📖 阶段导读
+
+### 阶段三：体验与性能（P2）— 如何让用户感觉更快更好？
+
+> **核心理念**：用户体验无小事，性能优化永无止境。
+
+本阶段从"能用"走向"好用"。骨架屏让等待不再焦虑，列记忆尊重用户习惯，快捷键提升操作效率，ProTable 让开发更高效，Keep-Alive 让页面切换如丝般顺滑，图片懒加载和请求缓存减少不必要的网络请求，国际化让产品面向全球用户。
+
+**模块关系：**
+
+- **体验类**：骨架屏、列记忆、快捷键、ProTable、国际化 → 直接提升用户感知
+- **性能类**：Keep-Alive、懒加载、请求缓存 → 减少资源消耗，提升加载速度
+
+---
+
+# 阶段三（体验与性能 P2）深度分析文档
 
 ## 目录
 
 1. [骨架屏组件 TableSkeleton](#1-骨架屏组件-tableskeleton)
 2. [表格列记忆 useTableColumns](#2-表格列记忆-usetablecolumns)
 3. [快捷键系统 useShortcuts](#3-快捷键系统-useshortcuts)
-4. [ProTable高级表格](#4-protable高级表格)
-5. [路由缓存Keep-Alive](#5-路由缓存keep-alive)
+4. [ProTable 高级表格](#4-protable高级表格)
+5. [路由缓存 Keep-Alive](#5-路由缓存keep-alive)
 6. [图片懒加载指令](#6-图片懒加载指令)
 7. [请求缓存机制](#7-请求缓存机制)
-8. [国际化i18n](#8-国际化i18n)
+8. [国际化 i18n](#8-国际化i18n)
 
 ---
 
@@ -2765,7 +3434,7 @@ dist/
 
 ### 1.2 详细实现步骤
 
-1. **定义组件 Props 接口：定义 rows、columns、rowHeight、columnWidths 四个可选属性，分别控制骨架屏的行数、列数、行高和列宽数组。
+1. \*\*定义组件 Props 接口：定义 rows、columns、rowHeight、columnWidths 四个可选属性，分别控制骨架屏的行数、列数、行高和列宽数组。
 
 2. **设置默认值**：使用 `withDefaults` 为 Props 提供默认值，默认 5 行 4 列，行高 48px，列宽数组为空。
 
@@ -2798,7 +3467,7 @@ flowchart TD
 
 TableSkeleton 组件的核心设计思想是**结构模拟 + 视觉动画**。结构上通过双层 v-for 循环精确模拟表格的行列布局，让用户在数据加载时就能预期最终内容的大致结构。视觉上通过 shimmer 渐变流动动画传递"正在加载"的语义，比传统的旋转 loading 图标更加自然和沉浸式。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **响应式列宽计算**：`widthArr` 计算属性巧妙地处理了两种列宽模式——自定义列宽和自动平均分配，提供了灵活性和易用性的平衡。
 
@@ -2825,25 +3494,37 @@ graph LR
 
 ### 1.6 项目实际代码示例
 
+````vue
 ```vue
-<!-- TableSkeleton.vue 核心实现
+<!-- TableSkeleton.vue 核心实现（带详细注释） -->
 <template>
+  <!-- 外层容器 -->
   <div class="skeleton-wrapper">
+    <!-- 第一层 v-for：渲染 rows 行 -->
     <div
       v-for="i in rows"
       :key="i"
       class="skeleton-row"
       :style="{ height: rowHeight + 'px' }"
+      <!--
+      每行高度由
+      props.rowHeight
+      控制
+      --
     >
+      >
+      <!-- 第二层 v-for：每行渲染 columns 列 -->
       <div
         v-for="j in columns"
         :key="j"
         class="skeleton-col"
         :style="{
+          // 列宽：优先使用传入的 columnWidths 数组，否则平均分配
           width: columnWidths[j - 1] || `${100 / columns}%`,
-          height: rowHeight - 16 + 'px',
+          height: rowHeight - 16 + 'px',  <!-- 列高比行高少 16px，留出间距 -->
         }"
       >
+        <!-- 内部的 shimmer 元素：负责渲染闪光动画 -->
         <div class="skeleton-shimmer"></div>
       </div>
     </div>
@@ -2853,13 +3534,15 @@ graph LR
 <script setup lang="ts">
 import { computed } from "vue";
 
+// 定义 Props 接口
 interface Props {
-  rows?: number;
-  columns?: number;
-  rowHeight?: number;
-  columnWidths?: string[];
+  rows?: number; // 行数，默认 5
+  columns?: number; // 列数，默认 4
+  rowHeight?: number; // 每行高度（px），默认 48
+  columnWidths?: string[]; // 每列宽度数组，不传则自动平均分配
 }
 
+// 设置 Props 默认值
 const props = withDefaults(defineProps<Props>(), {
   rows: 5,
   columns: 4,
@@ -2867,6 +3550,8 @@ const props = withDefaults(defineProps<Props>(), {
   columnWidths: () => [],
 });
 
+// 计算列宽数组：如果传入了 columnWidths 则使用，否则生成等宽数组
+// 注意：此计算属性目前未在模板中使用（模板直接内联计算），保留以备后续扩展
 const widthArr = computed(() => {
   if (props.columnWidths.length > 0) return props.columnWidths;
   return Array(props.columns).fill(`${100 / props.columns}%`);
@@ -2874,26 +3559,35 @@ const widthArr = computed(() => {
 </script>
 
 <style scoped>
+/*
+ * shimmer 动画核心样式
+ * 原理：使用渐变背景 + CSS 动画移动背景位置，营造"光线扫过"的视觉效果
+ */
 .skeleton-shimmer {
-  position: absolute;
+  position: absolute; /* 绝对定位填满父容器 */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  /* 三色渐变：浅灰 → 中灰 → 浅灰，模拟光线渐变 */
   background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 37%, #f2f2f2 63%);
+  /* 背景尺寸放大到 400%，以便动画移动时有足够空间 */
   background-size: 400% 100%;
+  /* 1.4 秒一个循环，无限播放 */
   animation: shimmer 1.4s ease infinite;
 }
+
+/* 定义 shimmer 动画：背景位置从右向左移动 */
 @keyframes shimmer {
   0% {
-    background-position: 100% 50%;
+    background-position: 100% 50%; /* 起始：渐变在最右侧 */
   }
   100% {
-    background-position: 0 50%;
+    background-position: 0 50%; /* 结束：渐变在最左侧 */
   }
 }
 </style>
-```
+````
 
 ---
 
@@ -2922,6 +3616,7 @@ const widthArr = computed(() => {
 7. **计算可见列**：`visibleColumns` 响应式数据过滤出 visible 不为 false 的列。
 
 8. **提供操作方法**：
+
    - `toggleColumn(prop)`：切换指定列的显示/隐藏状态
    - `resetColumns()`：重置为默认列配置
    - `setColumnWidth(prop, width)`：设置指定列的宽度
@@ -2955,7 +3650,7 @@ flowchart TD
 
 useTableColumns 的核心设计模式是**组合式函数 + 本地持久化**。通过 Vue 3 的 Composition API 将表格列配置的状态管理逻辑封装成可复用的函数，任何需要列记忆功能的表格组件只需一行代码即可接入。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **localStorage 持久化**：利用浏览器 localStorage 存储用户配置，数据在页面刷新和重新打开后仍然保留，实现用户个性化配置的持久化。
 
@@ -2989,29 +3684,43 @@ graph TD
 
 ### 2.6 项目实际代码示例
 
+````typescript
 ```typescript
-// useTableColumns.ts 核心实现
+// useTableColumns.ts 核心实现（带详细注释）
 import { ref, watch } from "vue";
 
+// 组合式函数的配置选项接口
 interface UseTableColumnOptions {
-  key: string;
-  defaultColumns: ColumnConfig[];
+  key: string;                   // 存储键名，如 "emp"、"stu"，用于区分不同表格
+  defaultColumns: ColumnConfig[]; // 默认列配置
 }
 
+// 单列配置接口
 interface ColumnConfig {
-  prop: string;
-  label: string;
-  width?: number | string;
-  visible: boolean;
-  fixed?: "left" | "right" | boolean;
+  prop: string;                  // 列字段名，对应 el-table-column 的 prop 属性
+  label: string;                 // 列显示标题
+  width?: number | string;       // 列宽度，如 120、"200px"
+  visible: boolean;              // 是否显示
+  fixed?: "left" | "right" | boolean;  // 固定列位置
 }
 
+// localStorage 存储键名前缀，避免与其他应用冲突
 const STORAGE_PREFIX = "tlias_table_";
 
+/**
+ * 表格列记忆组合式函数
+ * @param options - 配置选项
+ * @returns 列配置状态和管理方法
+ */
 export function useTableColumns(options: UseTableColumnOptions) {
   const { key, defaultColumns } = options;
+  // 拼接完整的 localStorage 存储键名，如 "tlias_table_emp"
   const storageKey = STORAGE_PREFIX + key;
 
+  /**
+   * 从 localStorage 加载列配置
+   * 如果加载失败或无数据，返回默认配置的浅拷贝
+   */
   const loadFromStorage = (): ColumnConfig[] => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -3021,11 +3730,17 @@ export function useTableColumns(options: UseTableColumnOptions) {
     } catch (e) {
       console.warn("Failed to load table columns from storage:", e);
     }
+    // 返回浅拷贝，避免修改原始默认配置
     return [...defaultColumns];
   };
 
+  // 创建响应式列配置，初始值从 localStorage 加载
   const columns = ref<ColumnConfig[]>(loadFromStorage());
 
+  /**
+   * 保存列配置到 localStorage
+   * 序列化 columns 数组为 JSON 字符串
+   */
   const saveToStorage = () => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(columns.value));
@@ -3034,25 +3749,39 @@ export function useTableColumns(options: UseTableColumnOptions) {
     }
   };
 
+  /**
+   * 深度监听 columns 变化，自动保存到 localStorage
+   * deep: true 确保嵌套属性（如 visible）变化也能触发保存
+   */
   watch(columns, saveToStorage, { deep: true });
 
+  // 计算可见列：过滤掉 visible 为 false 的列
   const visibleColumns = ref(
     columns.value.filter((col) => col.visible !== false)
   );
 
+  /**
+   * 切换指定列的显示/隐藏状态
+   * @param prop - 列的 prop 字段名
+   */
   const toggleColumn = (prop: string) => {
     const col = columns.value.find((c) => c.prop === prop);
     if (col) {
-      col.visible = !col.visible;
+      col.visible = !col.visible;  // 切换 visible 状态
+      // 同步更新 visibleColumns
       visibleColumns.value = columns.value.filter((c) => c.visible !== false);
     }
   };
 
+  /**
+   * 重置列配置为默认值
+   */
   const resetColumns = () => {
     columns.value = [...defaultColumns];
     visibleColumns.value = columns.value.filter((c) => c.visible !== false);
   };
 
+  // 返回列配置状态和管理方法
   return {
     columns,
     visibleColumns,
@@ -3061,7 +3790,7 @@ export function useTableColumns(options: UseTableColumnOptions) {
     setColumnWidth,
   };
 }
-```
+````
 
 ---
 
@@ -3116,7 +3845,7 @@ flowchart TD
 
 快捷键系统的核心设计思想是**全局单例 + 自动生命周期管理**。通过模块级变量实现全局唯一的快捷键注册表和全局监听器，确保整个应用只有一个 keydown 事件监听器，性能最优。同时利用 Vue 的生命周期钩子自动管理快捷键的注册与注销。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **单例模式**：`globalListenerAdded` 标志确保全局 keydown 监听器只绑定一次，避免重复绑定造成的性能问题和逻辑混乱。
 
@@ -3151,49 +3880,105 @@ graph TD
 
 ### 3.6 项目实际代码示例
 
+````typescript
 ```typescript
-// useShortcuts.ts 核心实现
+// useShortcuts.ts 核心实现（带详细注释）
 import { onMounted, onBeforeUnmount } from "vue";
 
+// 快捷键配置接口
 interface ShortcutConfig {
-  key: string;
-  ctrl?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-  handler: () => void;
-  description?: string;
+  key: string;           // 按键名，如 "k"、"Escape"
+  ctrl?: boolean;        // 是否需要 Ctrl/Cmd 修饰键
+  shift?: boolean;       // 是否需要 Shift 修饰键
+  alt?: boolean;         // 是否需要 Alt 修饰键
+  handler: () => void;   // 快捷键触发时执行的回调函数
+  description?: string;  // 快捷键描述（用于调试）
 }
 
+// 全局注册表：存储所有已注册的快捷键配置
+// 模块级变量，整个应用生命周期内有效
 const registeredShortcuts: ShortcutConfig[] = [];
 
+/**
+ * 检查键盘事件是否匹配快捷键配置
+ * @param e - 键盘事件对象
+ * @param config - 快捷键配置
+ * @returns 是否匹配
+ */
 function matchShortcut(e: KeyboardEvent, config: ShortcutConfig): boolean {
+  // 按键名匹配：忽略大小写
   const keyMatch = e.key.toLowerCase() === config.key.toLowerCase();
+  // Ctrl/Cmd 修饰键匹配
+  // config.ctrl === true 时要求按下 Ctrl（或 Mac 的 Cmd）
+  // config.ctrl === false/undefined 时要求未按下 Ctrl
   const ctrlMatch = config.ctrl
-    ? e.ctrlKey || e.metaKey
+    ? e.ctrlKey || e.metaKey   // metaKey 兼容 Mac 的 Cmd 键
     : !e.ctrlKey && !e.metaKey;
+  // Shift 修饰键匹配
   const shiftMatch = config.shift ? e.shiftKey : !e.shiftKey;
+  // Alt 修饰键匹配
   const altMatch = config.alt ? e.altKey : !e.altKey;
+  // 所有条件都满足才算匹配
   return keyMatch && ctrlMatch && shiftMatch && altMatch;
 }
 
+/**
+ * 检测事件目标是否为输入框
+ * 如果是输入框/文本域/可编辑元素，返回 true（跳过快捷键处理）
+ */
+function isInputTarget(e: KeyboardEvent): boolean {
+  const target = e.target as HTMLElement;
+  return (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.contentEditable === "true"
+  );
+}
+
+/**
+ * 全局键盘事件处理函数
+ * 遍历所有已注册的快捷键，找到匹配的执行 handler
+ */
 function handleKeydown(e: KeyboardEvent) {
+  // 在输入框中按快捷键时跳过，不干扰用户正常输入
   if (isInputTarget(e)) return;
+
+  // 按注册顺序遍历，找到第一个匹配即执行并停止
   for (const config of registeredShortcuts) {
     if (matchShortcut(e, config)) {
-      e.preventDefault();
-      config.handler();
-      break;
+      e.preventDefault();     // 阻止默认行为（如 Ctrl+K 的浏览器搜索）
+      config.handler();       // 执行注册的处理函数
+      break;                  // 找到即停止，避免重复触发
     }
   }
 }
 
+// 全局监听器是否已添加的标志位
+let globalListenerAdded = false;
+
+/**
+ * 确保全局 keydown 监听器只添加一次
+ */
+function ensureGlobalListener() {
+  if (!globalListenerAdded) {
+    window.addEventListener("keydown", handleKeydown);
+    globalListenerAdded = true;
+  }
+}
+
+/**
+ * 组合式函数：在组件中注册快捷键
+ * 组件挂载时注册，卸载时自动清理
+ * @param shortcuts - 快捷键配置数组
+ */
 export function useShortcuts(shortcuts: ShortcutConfig[]) {
   onMounted(() => {
-    ensureGlobalListener();
-    registeredShortcuts.push(...shortcuts);
+    ensureGlobalListener();          // 确保全局监听器已添加
+    registeredShortcuts.push(...shortcuts);  // 注册当前组件的快捷键
   });
 
   onBeforeUnmount(() => {
+    // 组件卸载时移除该组件注册的快捷键，防止内存泄漏
     shortcuts.forEach((sc) => {
       const idx = registeredShortcuts.indexOf(sc);
       if (idx > -1) {
@@ -3203,13 +3988,18 @@ export function useShortcuts(shortcuts: ShortcutConfig[]) {
   });
 }
 
+/**
+ * 全局快捷键注册函数（通常在 Layout 组件中调用一次）
+ * 注册应用级别的通用快捷键
+ */
 export function useGlobalShortcuts() {
   const shortcuts: ShortcutConfig[] = [
     {
-      key: "k",
-      ctrl: true,
+      key: "k",              // 按键：K
+      ctrl: true,            // 需要 Ctrl（Mac 上兼容 Cmd）
       description: "搜索",
       handler: () => {
+        // 聚焦全局搜索框
         const searchInput = document.querySelector(
           ".global-search input"
         ) as HTMLInputElement;
@@ -3218,14 +4008,15 @@ export function useGlobalShortcuts() {
         }
       },
     },
+    // 可在此处添加更多全局快捷键，如 Escape 关闭弹窗
   ];
-  // ...
+  useShortcuts(shortcuts);
 }
-```
+````
 
 ---
 
-## 4. ProTable高级表格
+## 4. ProTable 高级表格
 
 ### 4.1 功能介绍说明
 
@@ -3285,7 +4076,7 @@ flowchart TD
 
 ProTable 的核心设计理念是**约定优于配置 + 高度可扩展**。通过大量的默认配置和自动推导逻辑，让简单场景下使用 Props 配置即可快速开发；同时通过丰富的插槽机制，支持复杂场景的自定义。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **组合式函数集成**：集成 useTableColumns 实现列配置持久化，columnKey 区分不同表格，实现多表格独立记忆。
 
@@ -3326,20 +4117,27 @@ graph TD
 
 ### 4.6 项目实际代码示例
 
+````vue
 ```vue
-<!-- ProTable.vue 核心实现
+<!-- ProTable.vue 核心模板（带详细注释） -->
 <template>
   <div class="pro-table">
-    <!-- 搜索栏 -->
+    <!-- ═══ 搜索栏区域 ═══ -->
+    <!-- v-if="showSearch" 控制是否显示搜索栏 -->
     <div class="pro-table-search" v-if="showSearch">
+      <!-- search 插槽：允许父组件完全自定义搜索区域 -->
       <slot name="search">
+        <!-- 默认搜索表单：基于 Element Plus el-form -->
         <el-form :model="searchForm" inline @submit.prevent>
+          <!-- search-form 插槽：允许父组件自定义搜索表单项 -->
           <slot name="search-form">
+            <!-- 根据 searchColumns 配置动态生成搜索表单项 -->
             <el-form-item
               v-for="item in searchColumns"
               :key="item.prop"
               :label="item.label"
             >
+              <!-- 输入框类型：支持回车搜索 -->
               <el-input
                 v-if="item.type === 'input' || !item.type"
                 v-model="searchForm[item.prop]"
@@ -3347,9 +4145,10 @@ graph TD
                 clearable
                 @keyup.enter="handleSearch"
               />
-              <!-- select/date 等 -->
+              <!-- select/date 等其他类型在此扩展 -->
             </el-form-item>
           </slot>
+          <!-- 搜索和重置按钮 -->
           <el-form-item>
             <el-button type="primary" @click="handleSearch">搜索</el-button>
             <el-button @click="handleReset">重置</el-button>
@@ -3358,53 +4157,110 @@ graph TD
       </slot>
     </div>
 
-    <!-- 工具栏 -->
+    <!-- ═══ 工具栏区域 ═══ -->
     <div class="pro-table-toolbar">
+      <!-- 工具栏左侧：新增/批量删除按钮 -->
       <div class="toolbar-left">
         <slot name="toolbar-left">
-          <el-button type="primary" v-if="addVisible" @click="handleAdd">新增</el-button>
-          <el-button type="danger" v-if="batchDeleteVisible" :disabled="!selected.length" @click="handleBatchDelete">批量删除</el-button>
+          <el-button type="primary" v-if="addVisible" @click="handleAdd"
+            >新增</el-button
+          >
+          <el-button
+            type="danger"
+            v-if="batchDeleteVisible"
+            :disabled="!selected.length"
+            @click="handleBatchDelete"
+            >批量删除</el-button
+          >
         </slot>
       </div>
+      <!-- 工具栏右侧：自定义内容 + 列设置下拉 -->
       <div class="toolbar-right">
         <slot name="toolbar-right" />
-        <el-dropdown v-if="columnSettingsVisible" trigger="click" @command="handleColumnCommand">
+        <!-- 列设置下拉菜单 -->
+        <el-dropdown
+          v-if="columnSettingsVisible"
+          trigger="click"
+          @command="handleColumnCommand"
+        >
           <el-button :icon="Setting">列设置</el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item v-for="col in columnConfigs" :key="col.prop" :command="col.prop">
+              <!-- 遍历所有列配置，显示勾选状态 -->
+              <el-dropdown-item
+                v-for="col in columnConfigs"
+                :key="col.prop"
+                :command="col.prop"
+              >
                 <el-icon v-if="col.visible !== false"><Check /></el-icon>
                 <span style="margin-left: 8px">{{ col.label }}</span>
               </el-dropdown-item>
-              <el-dropdown-item divided command="reset">重置列</el-dropdown-item>
+              <!-- 重置列配置 -->
+              <el-dropdown-item divided command="reset"
+                >重置列</el-dropdown-item
+              >
             </el-dropdown-menu>
           </template>
         </el-dropdown>
       </div>
     </div>
 
-    <!-- 骨架屏 -->
+    <!-- ═══ 骨架屏加载状态 ═══ -->
+    <!-- loading 且 showSkeleton 时显示骨架屏，否则显示 el-table 的 v-loading -->
     <div v-if="loading && showSkeleton" class="table-skeleton-container">
-      <table-skeleton :rows="skeletonRows" :columns="visibleColumnCount + 2" :row-height="48" />
+      <table-skeleton
+        :rows="skeletonRows"
+        :columns="visibleColumnCount + 2"
+        :row-height="48"
+      />
     </div>
 
-    <!-- 表格 -->
-    <el-table v-show="!loading || !showSkeleton" v-loading="loading && !showSkeleton" :data="tableData" border stripe @selection-change="handleSelectionChange">
-      <el-table-column v-if="selectable" type="selection" width="50" align="center" />
+    <!-- ═══ 表格主体 ═══ -->
+    <!-- v-show：骨架屏显示时隐藏表格；v-loading：非骨架屏模式时显示 Element Plus loading -->
+    <el-table
+      v-show="!loading || !showSkeleton"
+      v-loading="loading && !showSkeleton"
+      :data="tableData"
+      border
+      stripe
+      @selection-change="handleSelectionChange"
+    >
+      <!-- 多选列 -->
+      <el-table-column
+        v-if="selectable"
+        type="selection"
+        width="50"
+        align="center"
+      />
+      <!-- 序号列 -->
       <el-table-column type="index" label="序号" width="60" align="center" />
+      <!-- 动态列：根据 columnConfigs 渲染，支持插槽自定义列内容 -->
       <template v-for="col in columnConfigs" :key="col.prop">
         <slot :name="`column-${col.prop}`" :col="col">
-          <el-table-column v-if="col.visible !== false" :prop="col.prop" :label="col.label" :width="col.width" :fixed="col.fixed || false" />
+          <el-table-column
+            v-if="col.visible !== false"
+            :prop="col.prop"
+            :label="col.label"
+            :width="col.width"
+            :fixed="col.fixed || false"
+          />
         </slot>
       </template>
-      <el-table-column v-if="$slots.action" label="操作" :width="actionWidth" align="center" fixed="right">
+      <!-- 操作列：固定在右侧，通过 action 插槽自定义 -->
+      <el-table-column
+        v-if="$slots.action"
+        label="操作"
+        :width="actionWidth"
+        align="center"
+        fixed="right"
+      >
         <template #default="scope">
           <slot name="action" :row="scope.row" :index="scope.$index" />
         </template>
       </el-table-column>
     </el-table>
 
-    <!-- 分页 -->
+    <!-- ═══ 分页器 ═══ -->
     <div class="pro-table-pagination">
       <el-pagination
         v-model:current-page="pagination.page"
@@ -3419,11 +4275,11 @@ graph TD
     </div>
   </div>
 </template>
-```
+````
 
 ---
 
-## 5. 路由缓存Keep-Alive
+## 5. 路由缓存 Keep-Alive
 
 ### 5.1 功能介绍说明
 
@@ -3442,6 +4298,7 @@ graph TD
 4. **路由白名单**：定义 WHITE_LIST 数组，包含不需要登录的路由路径。
 
 5. **前置守卫 beforeEach**：
+
    - 开始 NProgress 进度条
    - 取消所有未完成的请求
    - 白名单路由直接放行
@@ -3449,6 +4306,7 @@ graph TD
    - 权限检查
 
 6. **后置守卫 afterEach**：
+
    - 结束 NProgress 进度条
    - 设置页面标题
    - 如果路由有 keepAlive 且有 name，则调用 appStore.addCachedView 添加到缓存列表
@@ -3485,7 +4343,7 @@ flowchart TD
 
 路由缓存的核心设计思想是**声明式配置 + 集中式管理**。通过路由 meta.keepAlive 声明哪些路由需要缓存，使用 Pinia store 集中管理缓存列表，在路由守卫中自动维护缓存状态。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **动态 include**：使用 keep-alive 的 include 属性配合动态数组，实现灵活的缓存控制，而不是所有路由都缓存。
 
@@ -3523,32 +4381,37 @@ graph TD
 
 ### 5.6 项目实际代码示例
 
+````javascript
 ```javascript
-// router/index.js 核心实现
+// router/index.js 核心实现（带详细注释）
 import { createRouter, createWebHistory } from "vue-router";
 import { useUserStore, useAppStore } from "@/stores";
 import { cancelAllRequests } from "@/utils/axios";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
-// NProgress 配置
+// ─── NProgress 进度条配置 ───
+// 页面切换时在顶部显示加载进度条
 NProgress.configure({
-  showSpinner: false,
-  speed: 500,
-  trickleSpeed: 200,
+  showSpinner: false,      // 不显示右上角旋转 spinner
+  speed: 500,              // 进度条移动速度（毫秒）
+  trickleSpeed: 200,       // 自动增长间隔（毫秒）
 });
 
-// 路由白名单
+// ─── 路由白名单 ───
+// 这些页面不需要登录即可访问
 const WHITE_LIST = ["/login", "/403", "/404", "/500"];
 
-// 静态路由配置
+// ─── 静态路由配置 ───
 const routes = [
+  // 登录页：name 必须唯一，keep-alive 的 include 通过 name 匹配
   {
     path: "/login",
     name: "登录",
-    component: () => import("@/views/login/index.vue"),
+    component: () => import("@/views/login/index.vue"),  // 懒加载
     meta: { title: "登录" },
   },
+  // 布局路由：所有需要侧边栏的页面都嵌套在此之下
   {
     path: "/",
     component: () => import("@/views/layout/index.vue"),
@@ -3557,41 +4420,56 @@ const routes = [
         path: "index",
         name: "首页",
         component: () => import("@/views/index/index.vue"),
-        meta: { title: "首页", keepAlive: true },
+        meta: {
+          title: "首页",
+          keepAlive: true,  // 标记需要 Keep-Alive 缓存
+        },
       },
       // ...其他路由
     ],
   },
 ];
 
+// ─── 创建路由器实例 ───
 const router = createRouter({
+  // createWebHistory：使用 HTML5 History 模式（URL 不带 #）
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
-// 前置守卫
-router.beforeEach((to) => {
+// ─── 前置守卫（beforeEach）：路由跳转前执行 ───
+router.beforeEach((to, from, next) => {
+  // 1. 开始显示 NProgress 进度条
   NProgress.start();
+  // 2. 取消所有未完成的请求（清理旧路由的残留请求）
   cancelAllRequests();
 
   const userStore = useUserStore();
   const token = userStore.token;
 
+  // 3. 白名单判断：登录页/错误页不需要登录
   if (WHITE_LIST.includes(to.path)) {
+    // 已登录用户访问登录页，重定向到首页
     if (to.path === "/login" && token) return "/index";
-    return;
+    return;  // 白名单直接放行
   }
 
+  // 4. 未登录则重定向到登录页
   if (!token) return "/login";
 
+  // 5. 权限检查：如果路由配置了 meta.permission，检查用户是否有权限
   const permission = to.meta?.permission;
   if (permission && !userStore.hasPermission(permission)) return "/403";
+
+  // 6. 以上检查都通过，放行
 });
 
-// 后置守卫
+// ─── 后置守卫（afterEach）：路由跳转完成后执行 ───
 router.afterEach((to) => {
+  // 1. 结束 NProgress 进度条
   NProgress.done();
 
+  // 2. 设置页面标题
   const title = to.meta?.title;
   if (title) {
     document.title = `${title} - Tlias`;
@@ -3599,7 +4477,8 @@ router.afterEach((to) => {
     document.title = "Tlias 智能学习辅助系统";
   }
 
-  // KeepAlive 缓存管理
+  // 3. Keep-Alive 缓存管理
+  // 如果路由标记了 keepAlive 且有 name，添加到 appStore 的缓存列表
   const appStore = useAppStore();
   if (to.meta?.keepAlive && to.name) {
     appStore.addCachedView(to.name);
@@ -3607,7 +4486,7 @@ router.afterEach((to) => {
 });
 
 export default router;
-```
+````
 
 ---
 
@@ -3624,11 +4503,12 @@ export default router;
 1. **定义指令对象**：创建 `imageLazyDirective` 对象，实现 Vue 指令的 mounted、updated、unmounted 钩子。
 
 2. **mounted 钩子**：
+
    - 将真实图片地址保存到 `data-src` 属性
    - 添加 `lazy-image` CSS 类名
    - 检测浏览器是否支持 IntersectionObserver
    - 支持则创建 IntersectionObserver 实例
-     - 配置 rootMargin: "50px"（提前50px加载）
+     - 配置 rootMargin: "50px"（提前 50px 加载）
      - 配置 threshold: 0.01（1% 可见即触发）
    - 监听元素进入视口
    - 进入视口后设置 img.src = data-src
@@ -3638,11 +4518,13 @@ export default router;
    - 将 observer 实例保存到元素的 `__observer` 属性
 
 3. **updated 钩子**：
+
    - 检测 binding.value 变化
    - 更新 data-src 属性
    - 重新观察元素
 
 4. **unmounted 钩子**：
+
    - 从元素的 `__observer` 获取 observer 实例
    - 调用 unobserve 停止观察，清理资源
 
@@ -3675,7 +4557,7 @@ flowchart TD
 
 图片懒加载的核心原理是**视口检测 + 延迟加载**。利用 Intersection Observer API 高效检测元素是否进入可视区域，只在需要时才加载图片资源，避免不必要的网络请求。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **Intersection Observer API**：浏览器原生 API，性能远优于传统的 scroll 事件 + getBoundingClientRect 的方案，不会频繁触发，性能更好。
 
@@ -3715,74 +4597,125 @@ graph TD
 
 ### 6.6 项目实际代码示例
 
+````typescript
 ```typescript
-// lazyImage.ts 核心实现
+// lazyImage.ts 核心实现（带详细注释）
 import { type Directive, type App } from "vue";
 
+/**
+ * 图片懒加载自定义指令
+ * 用法：<img v-lazy="imageUrl" />
+ *
+ * 核心原理：
+ * 1. 将真实图片地址存入 data-src 属性，不直接设置 src（浏览器不会加载）
+ * 2. 使用 IntersectionObserver 监听元素是否进入视口
+ * 3. 进入视口时从 data-src 读取真实地址并设置 src，触发加载
+ */
 const imageLazyDirective: Directive<HTMLImageElement, string> = {
+  /**
+   * mounted：元素插入 DOM 后触发
+   * @param el - img 元素
+   * @param binding - 指令绑定信息，binding.value 是绑定的图片地址
+   */
   mounted(el, binding) {
+    // 将真实图片地址保存到 data-src 自定义属性中
     el.setAttribute("data-src", binding.value);
+    // 添加 CSS 类名，可用于设置占位样式（如灰色背景）
     el.classList.add("lazy-image");
 
+    // 检测浏览器是否支持 IntersectionObserver API
     if ("IntersectionObserver" in window) {
+      // 创建观察器实例
       const observer = new IntersectionObserver(
+        // 回调函数：当被观察元素的状态发生变化时触发
         (entries) => {
           entries.forEach((entry) => {
+            // isIntersecting：元素是否进入了视口
             if (entry.isIntersecting) {
               const img = entry.target as HTMLImageElement;
+              // 从 data-src 读取真实图片地址
               const src = img.getAttribute("data-src");
               if (src) {
-                img.src = src;
-                img.classList.add("lazy-image-loaded");
-                observer.unobserve(img);
+                img.src = src;               // 设置 src，触发图片加载
+                img.classList.add("lazy-image-loaded");  // 添加加载完成类
+                observer.unobserve(img);       // 停止观察，释放资源
               }
             }
           });
         },
         {
+          // rootMargin: "50px" — 提前 50px 开始加载
+          // 图片还没完全进入视口时就触发加载，用户滚动时几乎无感知
           rootMargin: "50px",
+          // threshold: 0.01 — 元素 1% 可见即触发
           threshold: 0.01,
         }
       );
+      // 开始观察当前 img 元素
       observer.observe(el);
+      // 将 observer 实例保存到元素上，供 updated/unmounted 使用
       (el as any).__observer = observer;
     } else {
+      // 降级方案：不支持 IntersectionObserver 的浏览器直接加载图片
       el.src = binding.value;
     }
   },
+
+  /**
+   * updated：指令绑定的值变化时触发
+   * 支持动态图片地址的懒加载
+   */
   updated(el, binding) {
     if (binding.value !== binding.oldValue) {
+      // 更新 data-src
       el.setAttribute("data-src", binding.value);
       const observer = (el as any).__observer;
       if (observer) {
+        // 重新观察元素
         observer.observe(el);
       }
     }
   },
+
+  /**
+   * unmounted：元素从 DOM 移除时触发
+   * 清理 observer，防止内存泄漏
+   */
   unmounted(el) {
     const observer = (el as any).__observer;
     if (observer) {
-      observer.unobserve(el);
+      observer.unobserve(el);  // 停止观察，释放资源
     }
   },
 };
 
+/**
+ * 注册图片懒加载指令到 Vue 应用
+ * @param app - Vue 应用实例
+ */
 export function setupLazyImageDirective(app: App): void {
+  // 注册为全局指令 v-lazy
   app.directive("lazy", imageLazyDirective);
 }
 
 export default imageLazyDirective;
-```
+````
 
 ```typescript
-// directives/index.ts 统一注册
+// directives/index.ts 统一注册（带详细注释）
 import type { App } from "vue";
 import { permission, role } from "./permission.js";
 import { setupLazyImageDirective } from "./lazyImage";
 
+/**
+ * 统一注册所有自定义指令
+ * @param app - Vue 应用实例
+ */
 export function setupDirectives(app: App): void {
+  // 注册权限指令
   app.directive("permission", permission);
   app.directive("role", role);
+  // 注册图片懒加载指令
   setupLazyImageDirective(app);
 }
 
@@ -3808,6 +4741,7 @@ export { permission, role };
 3. **生成缓存键**：`generateKey` 函数根据 URL 和 params 生成唯一缓存键，params 按键名排序后 JSON 序列化，确保相同参数生成相同键。
 
 4. **useRequestCache 函数**：
+
    - 合并配置选项
    - 创建 Map 作为缓存存储
    - 定义 hitCount、missCount 响应式变量统计命中/未命中次数
@@ -3856,7 +4790,7 @@ flowchart TD
 
 请求缓存的核心设计思想是**空间换时间**。将请求结果暂存在内存中，相同请求直接返回缓存，减少网络请求和等待时间。同时通过过期时间和最大数量控制内存占用，避免无限制增长。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **Map 数据结构**：使用 Map 存储缓存，O(1) 时间复杂度的读写，性能优异。
 
@@ -3895,28 +4829,36 @@ graph TD
 
 ### 7.6 项目实际代码示例
 
+````typescript
 ```typescript
-// useRequestCache.ts 核心实现
+// useRequestCache.ts 核心实现（带详细注释）
 import { ref, watch } from "vue";
 
+// 缓存配置接口
 interface CacheOptions {
-  maxAge?: number;
-  maxSize?: number;
+  maxAge?: number;     // 最大存活时间（毫秒），默认 5 分钟
+  maxSize?: number;    // 最大缓存条目数，默认 200
 }
 
+// 缓存项结构
 interface CacheItem {
-  data: any;
-  timestamp: number;
+  data: any;           // 缓存的数据
+  timestamp: number;   // 缓存创建的时间戳（Date.now()）
 }
 
+// 默认配置
 const defaultOptions: Required<CacheOptions> = {
-  maxAge: 5 * 60 * 1000,
-  maxSize: 200,
+  maxAge: 5 * 60 * 1000,   // 5 分钟
+  maxSize: 200,             // 200 条
 };
 
+/**
+ * 生成缓存键
+ * 将 params 按键名排序后 JSON 序列化，确保 {a:1,b:2} 和 {b:2,a:1} 生成相同键
+ */
 function generateKey(url: string, params: any = {}): string {
   const sortedParams = Object.keys(params)
-    .sort()
+    .sort()                             // 按键名升序排序
     .reduce((acc: Record<string, any>, key) => {
       acc[key] = params[key];
       return acc;
@@ -3924,53 +4866,72 @@ function generateKey(url: string, params: any = {}): string {
   return url + JSON.stringify(sortedParams);
 }
 
+/**
+ * 请求缓存组合式函数
+ * @param options - 缓存配置选项
+ * @returns 缓存管理方法和统计信息
+ */
 export function useRequestCache(options: CacheOptions = {}) {
+  // 合并默认配置和用户配置
   const opts = { ...defaultOptions, ...options };
+  // 使用 Map 存储缓存数据，O(1) 读写性能
   const cache = new Map<string, CacheItem>();
 
+  // 命中/未命中计数器（响应式，可用于 UI 展示）
   const hitCount = ref(0);
   const missCount = ref(0);
 
+  /**
+   * 从缓存获取数据
+   * @param key - 缓存键
+   * @returns 缓存数据或 null
+   */
   function get(key: string): any | null {
     const item = cache.get(key);
     if (!item) {
-      missCount.value++;
+      missCount.value++;   // 缓存未命中
       return null;
     }
+    // 检查是否过期
     if (Date.now() - item.timestamp > opts.maxAge) {
-      cache.delete(key);
+      cache.delete(key);   // 过期数据自动删除
       missCount.value++;
       return null;
     }
-    hitCount.value++;
+    hitCount.value++;      // 缓存命中
     return item.data;
   }
 
+  /**
+   * 设置缓存
+   * @param key - 缓存键
+   * @param data - 要缓存的数据
+   */
   function set(key: string, data: any): void {
+    // FIFO 淘汰：缓存已满时删除最早插入的条目
     if (cache.size >= opts.maxSize) {
-      const firstKey = cache.keys().next().value;
-      if (firstKey) {
-        cache.delete(firstKey);
-      }
+      const firstKey = cache.keys().next().value;  // Map 保持插入顺序
+      if (firstKey) cache.delete(firstKey);
     }
-    cache.set(key, {
-      data,
-      timestamp: Date.now(),
-    });
+    cache.set(key, { data, timestamp: Date.now() });
   }
 
+  /** 清空所有缓存 */
   function clear(): void {
     cache.clear();
   }
 
+  /**
+   * 按模式批量删除缓存
+   * @param pattern - 匹配模式，如 "/api/emps"
+   */
   function invalidate(pattern: string): void {
     for (const key of cache.keys()) {
-      if (key.includes(pattern)) {
-        cache.delete(key);
-      }
+      if (key.includes(pattern)) cache.delete(key);
     }
   }
 
+  // 计算命中率（响应式，缓存命中/未命中变化时自动更新）
   const hitRate = ref(0);
   watch([hitCount, missCount], () => {
     const total = hitCount.value + missCount.value;
@@ -3978,34 +4939,40 @@ export function useRequestCache(options: CacheOptions = {}) {
   });
 
   return {
-    get,
-    set,
-    clear,
-    invalidate,
-    generateKey,
-    hitCount,
-    missCount,
-    hitRate,
+    get, set, clear, invalidate, generateKey,
+    hitCount, missCount, hitRate,
   };
 }
 
+/**
+ * 高阶函数：将任意请求函数包装成带缓存的版本
+ * @param requestFn - 原始请求函数
+ * @param options - 缓存配置
+ * @returns 带缓存的请求函数
+ */
 export function createCachedRequest(
   requestFn: (params?: any) => Promise<any>,
   options: CacheOptions = {}
 ) {
   const cache = useRequestCache(options);
 
+  /**
+   * 缓存版请求函数
+   * 先查缓存，命中则直接返回；未命中则执行真实请求并缓存结果
+   */
   async function cachedRequest(params?: any): Promise<any> {
     const key = cache.generateKey(requestFn.name || "request", params);
     const cached = cache.get(key);
     if (cached) {
-      return Promise.resolve(cached);
+      return Promise.resolve(cached);  // 缓存命中，直接返回
     }
+    // 缓存未命中，执行真实请求
     const result = await requestFn(params);
-    cache.set(key, result);
+    cache.set(key, result);            // 缓存结果
     return result;
   }
 
+  // 挂载管理方法到返回函数上
   cachedRequest.clearCache = () => cache.clear();
   cachedRequest.invalidateCache = (pattern: string) => cache.invalidate(pattern);
   cachedRequest.getCacheStats = () => ({
@@ -4016,11 +4983,11 @@ export function createCachedRequest(
 
   return cachedRequest;
 }
-```
+````
 
 ---
 
-## 8. 国际化i18n
+## 8. 国际化 i18n
 
 ### 8.1 功能介绍说明
 
@@ -4033,11 +5000,13 @@ export function createCachedRequest(
 1. **安装 vue-i18n**：安装 vue-i18n 依赖库。
 
 2. **创建语言包**：
+
    - `zh-CN.ts`：中文语言包，按模块组织翻译
    - `en-US.ts`：英文语言包，按模块组织翻译
    - 每个语言包包含 common、login、menu、header、dept、emp、clazz、student、report、error、password 等模块
 
 3. **创建 i18n 实例**：
+
    - 从 localStorage 读取保存的语言，默认中文
    - `createI18n` 创建实例
    - `legacy: false` 使用 Composition API 模式
@@ -4051,6 +5020,7 @@ export function createCachedRequest(
 5. **main.ts 中注册**：在 main.ts 中 `app.use(i18n)` 注册 i18n 插件。
 
 6. **Element Plus 国际化**：
+
    - 引入 zhCn 和 en 语言包
    - 根据当前语言选择对应的 Element Plus 语言包
    - `app.use(ElementPlus, { locale: elementLocale })`
@@ -4085,7 +5055,7 @@ flowchart TD
 
 国际化的核心设计思想是**统一管理 + 运行时切换**。所有翻译文本集中在语言包文件中统一管理，运行时根据当前语言动态查找对应的翻译文本，实现语言切换。
 
-**关键技术点分析：
+\*\*关键技术点分析：
 
 1. **Composition API 模式**：`legacy: false` 使用 Vue 3 的 Composition API 模式，与 `<script setup>` 完美配合，类型推断更好。
 
@@ -4124,32 +5094,52 @@ graph TD
 
 ### 8.6 项目实际代码示例
 
+````typescript
 ```typescript
-// locales/index.ts 核心实现
+// locales/index.ts 核心实现（带详细注释）
 import { createI18n } from "vue-i18n";
 import zhCN from "./zh-CN";
 import enUS from "./en-US";
 
+// 从 localStorage 读取上次选择的语言，默认中文
 const savedLanguage = localStorage.getItem("app-language") || "zh-CN";
 
+// 创建 vue-i18n 实例
 const i18n = createI18n({
+  // legacy: false — 使用 Composition API 模式（推荐）
+  // legacy: true — 使用 Options API 模式（$t 直接在模板中使用）
   legacy: false,
+
+  // 当前语言：从 localStorage 读取
   locale: savedLanguage,
+
+  // 回退语言：当某个翻译键在当前语言中找不到时，使用中文
   fallbackLocale: "zh-CN",
+
+  // 注册语言包：键名为语言代码，值为对应的翻译对象
   messages: {
     "zh-CN": zhCN,
     "en-US": enUS,
   },
+
+  // globalInjection: true — 在所有组件中全局注入 t 函数
+  // 开启后模板中可直接使用 $t('key')，setup 中可直接使用 t('key')
   globalInjection: true,
 });
 
+/**
+ * 切换语言
+ * @param locale - 目标语言："zh-CN" 或 "en-US"
+ */
 export function setLocale(locale: "zh-CN" | "en-US") {
+  // 更新 i18n 实例的当前语言
   (i18n.global.locale as any).value = locale;
+  // 保存到 localStorage，刷新后仍然记住用户选择
   localStorage.setItem("app-language", locale);
 }
 
 export default i18n;
-```
+````
 
 ```typescript
 // locales/zh-CN.ts 部分示例
@@ -4212,17 +5202,19 @@ app.mount("#app");
 
 ## 总结
 
-阶段三（体验与性能P2）的八个功能模块从用户体验和性能优化两个维度全面提升了应用质量：
+阶段三（体验与性能 P2）的八个功能模块从用户体验和性能优化两个维度全面提升了应用质量：
 
 **体验优化类**：
+
 - **骨架屏组件**：让加载过程有预期，减少等待焦虑
 - **表格列记忆**：个性化配置持久化，尊重用户习惯
 - **快捷键系统**：提升操作效率，专业用户友好
-- **ProTable高级表格**：开箱即用，提升开发效率
-- **国际化i18n**：多语言支持，拓展使用范围
+- **ProTable 高级表格**：开箱即用，提升开发效率
+- **国际化 i18n**：多语言支持，拓展使用范围
 
 **性能优化类**：
-- **路由缓存Keep-Alive**：避免重复渲染，秒级页面切换
+
+- **路由缓存 Keep-Alive**：避免重复渲染，秒级页面切换
 - **图片懒加载指令**：减少首屏加载时间，节省带宽
 - **请求缓存机制**：避免重复请求，减轻服务器压力
 
@@ -4230,9 +5222,26 @@ app.mount("#app");
 
 ---
 
-# 阶段四（监控与运维P3）深度分析文档
+## 📖 阶段导读
+
+### 阶段四：监控与运维（P3）— 线上出了问题怎么办？
+
+> **核心理念**：预防胜于治疗，但治疗也要有数据支撑。
+
+本阶段构建的是"看得见、管得住"的运维体系。性能监控告诉你页面加载有多慢，行为埋点告诉你用户在哪里点击，日志分级帮你快速定位问题，构建信息注入让你知道线上跑的是哪个版本。
+
+**模块关系：**
+
+- **数据采集层**：性能监控 + 行为埋点 → 收集页面性能和用户行为数据
+- **数据管理层**：日志分级 → 统一管理应用日志
+- **运维支撑层**：构建信息注入 + 环境配置完善 → 版本追踪和环境识别
+
+---
+
+# 阶段四（监控与运维 P3）深度分析文档
 
 ## 目录
+
 - [一、性能监控系统](#一性能监控系统)
 - [二、行为埋点系统](#二行为埋点系统)
 - [三、日志分级系统](#三日志分级系统)
@@ -4285,25 +5294,25 @@ flowchart TD
     A --> C[observeLCP 监听 LCP]
     A --> D[observeCLS 监听 CLS]
     A --> E[collectOnLoad 监听 load 事件]
-    
+
     B --> F{PerformanceObserver 可用?}
     F -->|是| G[监听 paint 条目]
     G --> H[捕获 first-paint 记录 FP]
     G --> I[捕获 first-contentful-paint 记录 FCP]
     F -->|否| J[跳过]
-    
+
     C --> K{PerformanceObserver 可用?}
     K -->|是| L[监听 largest-contentful-paint 条目]
     L --> M[更新 LCP 值]
     K -->|否| N[跳过]
-    
+
     D --> O{PerformanceObserver 可用?}
     O -->|是| P[监听 layout-shift 条目]
     P --> Q{有无用户输入?}
     Q -->|无| R[累加 CLS 值]
     Q -->|有| S[忽略]
     O -->|否| T[跳过]
-    
+
     E --> U[load 事件触发]
     U --> V[collectNavigationTiming 采集导航性能]
     U --> W[collectResourceTiming 采集资源性能]
@@ -4332,30 +5341,30 @@ flowchart LR
         A[Performance API] --> B[PerformanceObserver]
         C[window.load 事件] --> D[collectOnLoad]
     end
-    
+
     subgraph 性能监控模块
         B --> E[observeFCP]
         B --> F[observeLCP]
         B --> G[observeCLS]
         D --> H[collectNavigationTiming]
         D --> I[collectResourceTiming]
-        
+
         E --> J[(metrics 存储对象)]
         F --> J
         G --> J
         H --> J
         I --> J
-        
+
         J --> K[reportMetrics]
     end
-    
+
     subgraph 外部系统
         K --> L[perf:report CustomEvent]
         L --> M[事件监听器]
         M --> N[后端上报接口]
         M --> O[性能数据看板]
     end
-    
+
     style J fill:#f9f,stroke:#333,stroke-width:2px
     style L fill:#9f9,stroke:#333,stroke-width:2px
 ```
@@ -4385,15 +5394,24 @@ export interface PerfReportData {
 }
 ```
 
-**FCP/FP 采集实现**（`src/monitor/performance.ts:94-122`）：
+**FCP/FP 采集实现（带详细注释）：**
 
 ```typescript
+/**
+ * 观察 FCP（首次内容绘制）和 FP（首次绘制）
+ * 使用 PerformanceObserver API 被动监听浏览器性能事件
+ */
 function observeFCP(): void {
+  // 检测浏览器是否支持 PerformanceObserver
   if ("PerformanceObserver" in window) {
+    // 创建 PerformanceObserver 实例
+    // 回调函数在浏览器检测到性能条目时自动触发
     observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
+        // first-contentful-paint：浏览器渲染的第一个内容元素的时间
         if (entry.name === "first-contentful-paint") {
-          metrics.fcp = entry.startTime;
+          metrics.fcp = entry.startTime; // 记录时间戳
+          // 开发环境输出彩色日志
           if (import.meta.env.DEV) {
             console.log(
               "%c[性能监控] FCP (首次内容绘制):",
@@ -4402,30 +5420,43 @@ function observeFCP(): void {
             );
           }
         }
+        // first-paint：浏览器首次绘制任何内容的时间（可能是纯色背景）
         if (entry.name === "first-paint") {
           metrics.fp = entry.startTime;
         }
       }
     });
+    // 开始观察 "paint" 类型的性能条目
     observer.observe({ entryTypes: ["paint"] });
   }
 }
 ```
 
-**导航性能采集实现**（`src/monitor/performance.ts:38-69`）：
+**导航性能采集实现（带详细注释）：**
 
 ```typescript
+/**
+ * 收集导航性能数据
+ * 在页面 load 事件触发后调用
+ */
 function collectNavigationTiming(): void {
+  // 从 Performance API 获取导航性能数据
   const navigation = performance.getEntriesByType(
     "navigation"
   )[0] as PerformanceNavigationTiming;
+
   if (navigation) {
     metrics.navigationTiming = navigation;
 
+    // 计算关键指标
+    // TTFB（Time to First Byte）：首字节时间 = 响应开始 - 请求开始
     const ttfb = navigation.responseStart - navigation.requestStart;
+    // DOM Ready：DOM 解析完成时间 = DOM 内容加载结束 - 页面开始时间
     const domReady = navigation.domContentLoadedEventEnd - navigation.startTime;
+    // Load 完成：页面完全加载时间 = 加载事件结束 - 页面开始时间
     const loadTime = navigation.loadEventEnd - navigation.startTime;
 
+    // 开发环境输出彩色分组日志
     if (import.meta.env.DEV) {
       console.group(
         "%c[性能监控] 导航性能",
@@ -4491,43 +5522,43 @@ flowchart TD
     A[setupTrack 初始化] --> B[合并配置项]
     B --> C[MutationObserver 监听 DOM]
     B --> D[监听 beforeunload 事件]
-    
+
     C --> E[发现带 data-track 的元素]
     E --> F{已绑定?}
     F -->|否| G[绑定点击事件]
     G --> H[点击时读取 data-track 属性]
     H --> I[调用 trackClick]
     F -->|是| J[跳过]
-    
+
     I --> K[track 核心函数]
-    
+
     subgraph 命令式埋点
         L[trackPageView] --> K
         M[trackClick] --> K
         N[trackCustom] --> K
     end
-    
+
     K --> O{是否启用且非开发环境?}
     O -->|否| P[控制台输出]
     O -->|是| Q[补充公共字段]
-    
+
     Q --> R[加入事件队列]
     R --> S{队列是否达到最大容量?}
     S -->|是| T[移除最旧的事件]
     S -->|否| U[继续]
-    
+
     U --> V{队列数量 >= batchSize?}
     V -->|是| W[report 立即上报]
     V -->|否| X{定时器是否已启动?}
     X -->|否| Y[启动节流定时器]
     X -->|是| Z[等待]
-    
+
     Y --> AA[throttleTime 后触发 report]
-    
+
     W --> AB[清空队列]
     AA --> AB
     AB --> AC[触发 track:report 事件]
-    
+
     D --> AD[beforeunload 触发]
     AD --> AE[sendBeacon 上报剩余数据]
 ```
@@ -4536,11 +5567,11 @@ flowchart TD
 
 行为埋点系统的设计体现了几个重要的架构思想：**批量与节流结合的上报策略**、**声明式与命令式并用的埋点方式**、**完善的数据可靠性保障**。
 
-**批量与节流结合的上报策略**是系统的核心亮点。系统设置了两个上报触发条件：一是队列中的事件数量达到 `batchSize`（默认10条）时立即上报；二是如果队列中事件数量不足，但距离上次上报已经超过 `throttleTime`（默认5000毫秒），则定时上报。这种策略既保证了数据的及时性（高流量时批量上报），又保证了数据不会长时间积压（低流量定时上报）。
+**批量与节流结合的上报策略**是系统的核心亮点。系统设置了两个上报触发条件：一是队列中的事件数量达到 `batchSize`（默认 10 条）时立即上报；二是如果队列中事件数量不足，但距离上次上报已经超过 `throttleTime`（默认 5000 毫秒），则定时上报。这种策略既保证了数据的及时性（高流量时批量上报），又保证了数据不会长时间积压（低流量定时上报）。
 
 **声明式与命令式并用的埋点方式**提供了良好的开发体验。对于简单的点击埋点，开发人员只需要在 HTML 元素上添加 `data-track` 属性即可，无需编写任何 JavaScript 代码。系统通过 `MutationObserver` 动态监听 DOM 变化，即使是异步渲染的元素也能自动绑定埋点事件。对于复杂的业务场景，开发人员可以通过 `trackPageView`、`trackClick`、`trackCustom` 等 API 进行命令式埋点，灵活性更高。
 
-**完善的数据可靠性保障**体现在多个方面：首先，系统设置了 `maxQueueSize`（默认100条），防止队列无限增长导致内存泄漏；其次，在页面关闭时使用 `navigator.sendBeacon` API 进行上报，该 API 是浏览器专门为页面卸载时的数据上报设计的，能够保证数据发送的可靠性；最后，系统采用了事件驱动的设计，通过 `track:report` 自定义事件分发埋点数据，便于与不同的上报后端对接。
+**完善的数据可靠性保障**体现在多个方面：首先，系统设置了 `maxQueueSize`（默认 100 条），防止队列无限增长导致内存泄漏；其次，在页面关闭时使用 `navigator.sendBeacon` API 进行上报，该 API 是浏览器专门为页面卸载时的数据上报设计的，能够保证数据发送的可靠性；最后，系统采用了事件驱动的设计，通过 `track:report` 自定义事件分发埋点数据，便于与不同的上报后端对接。
 
 ### 2.5 数据流图
 
@@ -4551,24 +5582,24 @@ flowchart LR
         C[按钮点击] --> D[DOM 事件]
         E[业务操作] --> F[业务代码]
     end
-    
+
     subgraph 埋点系统
         B --> G[trackPageView]
         D --> H[data-track 声明式]
         H --> I[trackClick]
         F --> J[trackCustom]
-        
+
         G --> K[track 核心函数]
         I --> K
         J --> K
-        
+
         K --> L[补充公共字段]
         L --> M[(eventQueue 队列)]
-        
+
         M --> N{触发上报条件?}
         N -->|是| O[report 上报函数]
     end
-    
+
     subgraph 数据上报
         O --> P[track:report 事件]
         O --> Q[navigator.sendBeacon]
@@ -4576,43 +5607,53 @@ flowchart LR
         Q --> R
         R --> S[埋点数据分析平台]
     end
-    
+
     style M fill:#f9f,stroke:#333,stroke-width:2px
     style O fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
 ### 2.6 项目实际代码示例
 
-**核心配置与队列**（`src/monitor/track.ts:11-30`）：
+**核心配置与队列（带详细注释）：**
 
 ```typescript
+// 埋点配置接口
 export interface TrackConfig {
-  enabled: boolean;
-  batchSize: number;
-  throttleTime: number;
-  maxQueueSize: number;
-  reportUrl: string;
+  enabled: boolean; // 是否启用埋点
+  batchSize: number; // 批量上报阈值：达到此数量立即上报
+  throttleTime: number; // 节流时间：不足 batchSize 时，此时间后定时上报
+  maxQueueSize: number; // 最大队列容量：超过时丢弃最旧的数据
+  reportUrl: string; // 上报接口地址
 }
 
+// 默认配置
 const defaultConfig: TrackConfig = {
-  enabled: true,
-  batchSize: 10,
-  throttleTime: 5000,
-  maxQueueSize: 100,
+  enabled: true, // 默认启用
+  batchSize: 10, // 10 条一批上报
+  throttleTime: 5000, // 5 秒定时上报
+  maxQueueSize: 100, // 最多 100 条，防止内存泄漏
   reportUrl: "/api/log/track",
 };
 
+// 当前配置（可被 customConfig 覆盖）
 let config = { ...defaultConfig };
+// 事件队列：存储待上报的埋点事件
 const eventQueue: TrackEvent[] = [];
+// 上报定时器：用于节流上报
 let reportTimer: ReturnType<typeof setTimeout> | null = null;
 ```
 
-**核心 track 函数**（`src/monitor/track.ts:36-69`）：
+**核心 track 函数（带详细注释）：**
 
 ```typescript
+/**
+ * 核心埋点函数
+ * @param event - 埋点事件（不含 timestamp/url/userAgent 等公共字段）
+ */
 function track(
   event: Omit<TrackEvent, "timestamp" | "url" | "userAgent">
 ): void {
+  // 如果埋点未启用，仅在开发环境输出日志
   if (!isEnabled()) {
     if (import.meta.env.DEV) {
       console.group("%c[埋点]", "color: #67C23A; font-weight: bold;");
@@ -4621,21 +5662,26 @@ function track(
       if (event.data) console.log("数据:", event.data);
       console.groupEnd();
     }
-    return;
+    return; // 生产环境且未启用时静默丢弃
   }
 
+  // 补充公共字段
   const trackEvent: TrackEvent = {
     ...event,
-    url: window.location.href,
-    timestamp: Date.now(),
-    userAgent: navigator.userAgent,
+    url: window.location.href, // 当前页面 URL
+    timestamp: Date.now(), // 时间戳
+    userAgent: navigator.userAgent, // 用户代理
   };
 
+  // 队列满时丢弃最旧的数据（FIFO）
   if (eventQueue.length >= config.maxQueueSize) {
     eventQueue.shift();
   }
   eventQueue.push(trackEvent);
 
+  // 两个上报触发条件：
+  // 1. 队列达到 batchSize → 立即上报
+  // 2. 未达到 batchSize → 启动节流定时器
   if (eventQueue.length >= config.batchSize) {
     report();
   } else if (!reportTimer) {
@@ -4644,21 +5690,35 @@ function track(
 }
 ```
 
-**声明式埋点实现**（`src/monitor/track.ts:124-148`）：
+**声明式埋点实现（带详细注释）：**
 
 ```typescript
+/**
+ * 初始化埋点系统
+ * @param customConfig - 自定义配置（可选）
+ */
 export function setupTrack(customConfig?: Partial<TrackConfig>): void {
+  // 合并自定义配置
   if (customConfig) {
     config = { ...defaultConfig, ...customConfig };
   }
 
+  // 使用 MutationObserver 监听 DOM 变化
+  // 当有新元素加入 DOM 时，自动为带 data-track 属性的元素绑定埋点
   const observer = new MutationObserver(() => {
+    // 查找所有带有 data-track 属性的元素
     document.querySelectorAll("[data-track]").forEach((el) => {
+      // 如果已绑定过，跳过（防止重复绑定）
       if ((el as any).__trackBound) return;
       (el as any).__trackBound = true;
+
+      // 绑定点击事件
       el.addEventListener("click", () => {
+        // 读取 data-track 属性值，如 "click:btn_login"
         const trackEvent = el.getAttribute("data-track");
+        // 读取 data-track-data 属性值（可选），如 '{"userId": 123}'
         const trackData = el.getAttribute("data-track-data");
+        // 调用 trackClick 进行埋点
         trackClick(
           trackEvent || "click",
           trackData ? JSON.parse(trackData) : undefined
@@ -4667,9 +5727,10 @@ export function setupTrack(customConfig?: Partial<TrackConfig>): void {
     });
   });
 
+  // 开始监听 document.body 的子节点变化
   observer.observe(document.body, {
-    childList: true,
-    subtree: true,
+    childList: true, // 监听直接子节点的新增/删除
+    subtree: true, // 监听所有后代节点（包括异步渲染的内容）
   });
 }
 ```
@@ -4729,7 +5790,7 @@ flowchart TD
     D --> F[启动定时上报定时器]
     E --> F
     F --> G[监听 beforeunload 事件]
-    
+
     subgraph 日志使用
         H[Logger.debug] --> I
         J[Logger.info] --> I
@@ -4737,29 +5798,29 @@ flowchart TD
         L[Logger.error] --> I
         M[Logger.fatal] --> I[检查配置和级别]
     end
-    
+
     I --> N{是否启用且级别满足?}
     N -->|否| O[忽略]
     N -->|是| P[createLogEntry 创建日志条目]
-    
+
     P --> Q[outputToConsole 输出到控制台]
     Q --> R[addToQueue 加入队列]
-    
+
     R --> S{队列是否达到最大容量?}
     S -->|是| T[移除最旧的日志]
     S -->|否| U[继续]
-    
+
     U --> V{日志级别 >= 上报级别?}
     V -->|是| W[report 立即上报]
     V -->|否| X[等待]
-    
+
     F --> Y[定时触发 report]
     G --> Z[beforeunload 触发 report]
-    
+
     W --> AA[筛选上报级别的日志]
     Y --> AA
     Z --> AA
-    
+
     AA --> AB[触发 logger:report 事件]
     AB --> AC[sendBeacon 上报到后端]
     AC --> AD[从队列中移除已上报日志]
@@ -4773,7 +5834,7 @@ flowchart TD
 
 **模块化管理**通过 `Logger` 类的构造函数参数实现。每个业务模块可以创建自己的 Logger 实例，并传入模块名作为标识。这样，在查看日志时，可以清晰地知道每条日志来自哪个模块，便于问题定位。模块化日志在大型项目中尤为重要，当多个团队协作开发时，每个团队可以有自己的日志命名空间，避免日志混淆。
 
-**异步批量上报**策略保证了日志系统的性能。系统不会每条日志都立即上报，而是先将日志存入队列，然后通过两种方式触发上报：一是当日志级别达到上报级别时立即上报（确保严重错误能及时被发现）；二是通过定时器定期上报（`reportInterval`，默认10秒），批量上报积累的日志。这种策略既保证了重要日志的时效性，又减少了网络请求的次数。在页面关闭时，系统会使用 `navigator.sendBeacon` 进行最后一次上报，确保数据不丢失。
+**异步批量上报**策略保证了日志系统的性能。系统不会每条日志都立即上报，而是先将日志存入队列，然后通过两种方式触发上报：一是当日志级别达到上报级别时立即上报（确保严重错误能及时被发现）；二是通过定时器定期上报（`reportInterval`，默认 10 秒），批量上报积累的日志。这种策略既保证了重要日志的时效性，又减少了网络请求的次数。在页面关闭时，系统会使用 `navigator.sendBeacon` 进行最后一次上报，确保数据不丢失。
 
 ### 3.5 数据流图
 
@@ -4784,23 +5845,23 @@ flowchart LR
         C[模块B] --> D[Logger('moduleB')]
         E[全局代码] --> F[全局 Logger]
     end
-    
+
     subgraph 日志系统
         B --> G[debug/info/warn/error/fatal]
         D --> G
         F --> G
-        
+
         G --> H{级别过滤}
         H -->|通过| I[createLogEntry]
         H -->|不通过| J[丢弃]
-        
+
         I --> K[outputToConsole]
         I --> L[(logQueue 队列)]
-        
+
         L --> M{上报触发?}
         M -->|是| N[report 函数]
     end
-    
+
     subgraph 外部系统
         N --> O[logger:report 事件]
         N --> P[navigator.sendBeacon]
@@ -4809,24 +5870,29 @@ flowchart LR
         Q --> R[日志分析平台]
         Q --> S[告警系统]
     end
-    
+
     style L fill:#f9f,stroke:#333,stroke-width:2px
     style N fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
 ### 3.6 项目实际代码示例
 
-**日志级别定义**（`src/utils/logger.ts:1-50`）：
+**日志级别定义（带详细注释）：**
 
 ```typescript
+/**
+ * 日志级别枚举
+ * 数值越小级别越低，用于过滤和排序
+ */
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  FATAL = 4,
+  DEBUG = 0, // 调试信息：开发阶段使用，记录详细的执行流程
+  INFO = 1, // 普通信息：记录正常的业务流程
+  WARN = 2, // 警告：潜在问题，不影响运行但需要关注
+  ERROR = 3, // 错误：功能异常，需要及时处理
+  FATAL = 4, // 致命错误：系统级故障，需要立即处理
 }
 
+// 级别名称映射
 const levelNames: Record<LogLevel, string> = {
   [LogLevel.DEBUG]: "DEBUG",
   [LogLevel.INFO]: "INFO",
@@ -4835,32 +5901,42 @@ const levelNames: Record<LogLevel, string> = {
   [LogLevel.FATAL]: "FATAL",
 };
 
+// 控制台输出样式映射：不同级别使用不同颜色
 const levelStyles: Record<LogLevel, string> = {
-  [LogLevel.DEBUG]: "color: #909399;",
-  [LogLevel.INFO]: "color: #409EFF;",
-  [LogLevel.WARN]: "color: #E6A23C;",
-  [LogLevel.ERROR]: "color: #F56C6C;",
-  [LogLevel.FATAL]: "color: #C0392B; font-weight: bold;",
+  [LogLevel.DEBUG]: "color: #909399;", // 灰色
+  [LogLevel.INFO]: "color: #409EFF;", // 蓝色
+  [LogLevel.WARN]: "color: #E6A23C;", // 橙色
+  [LogLevel.ERROR]: "color: #F56C6C;", // 红色
+  [LogLevel.FATAL]: "color: #C0392B; font-weight: bold;", // 深红加粗
 };
 ```
 
-**Logger 类实现**（`src/utils/logger.ts:167-208`）：
+**Logger 类实现（带详细注释）：**
 
 ```typescript
 export class Logger {
-  private module?: string;
+  private module?: string; // 模块名，用于日志中标识来源
 
   constructor(module?: string) {
     this.module = module;
   }
 
+  /**
+   * 输出 DEBUG 级别日志
+   * @param message - 日志消息
+   * @param data - 附加数据
+   */
   debug(message: string, data?: any): void {
+    // 两层过滤：1) 检查是否启用 2) 检查级别是否满足
     if (!config.enabled || config.level > LogLevel.DEBUG) return;
     const entry = createLogEntry(LogLevel.DEBUG, message, data, this.module);
-    outputToConsole(entry);
-    addToQueue(entry);
+    outputToConsole(entry); // 输出到控制台
+    addToQueue(entry); // 加入上报队列
   }
 
+  /**
+   * 输出 ERROR 级别日志
+   */
   error(message: string, data?: any): void {
     if (!config.enabled || config.level > LogLevel.ERROR) return;
     const entry = createLogEntry(LogLevel.ERROR, message, data, this.module);
@@ -4870,12 +5946,17 @@ export class Logger {
 }
 ```
 
-**上报函数实现**（`src/utils/logger.ts:139-165`）：
+**上报函数实现（带详细注释）：**
 
 ```typescript
+/**
+ * 日志上报函数
+ * 筛选出达到上报级别的日志，通过事件和 sendBeacon 上报
+ */
 function report(): void {
   if (logQueue.length === 0) return;
 
+  // 筛选出级别 >= 上报级别的日志（如 reportLevel=ERROR 则只上报 ERROR 和 FATAL）
   const logs = logQueue.filter((log) => log.level >= config.reportLevel);
   if (logs.length === 0) return;
 
@@ -4884,9 +5965,12 @@ function report(): void {
     timestamp: Date.now(),
   };
 
+  // 通过 CustomEvent 分发日志事件，外部可监听此事件实现自定义上报
   const event = new CustomEvent("logger:report", { detail: reportData });
   window.dispatchEvent(event);
 
+  // 使用 navigator.sendBeacon 可靠地发送数据
+  // sendBeacon 在页面卸载时也能保证发送，适合日志上报场景
   if (navigator.sendBeacon && config.reportUrl) {
     const blob = new Blob([JSON.stringify(reportData)], {
       type: "application/json",
@@ -4894,6 +5978,7 @@ function report(): void {
     navigator.sendBeacon(config.reportUrl, blob);
   }
 
+  // 从队列中移除已上报的日志（逆序遍历，安全删除）
   for (let i = logQueue.length - 1; i >= 0; i--) {
     if (logQueue[i].level >= config.reportLevel) {
       logQueue.splice(i, 1);
@@ -4921,6 +6006,7 @@ function report(): void {
 **步骤一：在 vite.config.ts 中配置 define**
 
 在 Vite 配置文件中，通过 `define` 选项定义四个全局常量：
+
 - `__APP_ENV__`：从环境变量 `VITE_APP_ENV` 读取，表示应用的运行环境
 - `__BUILD_TIME__`：构建时的 ISO 时间字符串，表示构建发生的时间
 - `__BUILD_VERSION__`：从环境变量 `VITE_APP_VERSION` 读取，表示应用版本号
@@ -4935,6 +6021,7 @@ function report(): void {
 **步骤三：实现 buildInfo 工具模块**
 
 在 `src/utils/buildInfo.ts` 中实现了以下功能：
+
 - `BuildInfo` 接口：定义构建信息的结构
 - `getBuildInfo()`：获取完整的构建信息对象
 - `printBuildInfo()`：在控制台以分组形式打印构建信息
@@ -4952,32 +6039,32 @@ flowchart TD
     B --> C[loadEnv 加载环境变量]
     C --> D{根据 mode 加载.env 文件}
     D --> E[.env.development / .env.production 等]
-    
+
     E --> F[读取 VITE_APP_VERSION]
     E --> G[读取 VITE_APP_ENV]
-    
+
     H[获取当前时间 ISO 字符串] --> I[__BUILD_TIME__]
     F --> J[__BUILD_VERSION__]
     G --> K[__APP_ENV__]
     L[Vite mode 参数] --> M[__BUILD_ENV__]
-    
+
     I --> N[define 配置]
     J --> N
     K --> N
     M --> N
-    
+
     N --> O[构建时静态替换]
     O --> P[输出构建产物]
-    
+
     subgraph 运行时
         Q[浏览器加载页面] --> R[执行 main.ts]
         R --> S[printBuildInfo 打印信息]
         S --> T[控制台输出版本/环境/时间]
-        
+
         U[业务代码调用 getBuildInfo] --> V[获取构建信息对象]
         W[业务代码调用 isDev/isProd] --> X[环境判断]
     end
-    
+
     style N fill:#f9f,stroke:#333,stroke-width:2px
     style O fill:#9f9,stroke:#333,stroke-width:2px
 ```
@@ -4987,11 +6074,13 @@ flowchart TD
 构建信息注入的核心思想是**构建时静态替换**，这是 Vite 和 Rollup 等现代构建工具提供的强大特性。与运行时读取配置不同，构建时注入的信息在打包阶段就被硬编码到输出文件中，运行时不需要额外的请求或计算。
 
 **define 配置的工作原理**：Vite 的 `define` 选项使用的是静态文本替换。在构建过程中，Vite 会扫描所有源代码文件，将出现的 `__BUILD_VERSION__` 等全局变量直接替换为对应的值。这意味着：
+
 1. 这些变量必须作为完整的标识符出现，不能通过拼接等方式动态使用
 2. 替换是在编译时完成的，不会有任何运行时开销
 3. 最终的构建产物中不会保留这些变量名，只会有具体的值
 
 **为什么需要四个不同的变量**：
+
 - `__APP_ENV__`：表示应用逻辑层面的运行环境，由 `VITE_APP_ENV` 环境变量控制。这是业务代码最常用的环境判断依据，因为它可以区分 development、test、staging、production 等多种环境。
 - `__BUILD_ENV__`：表示 Vite 的构建模式，只能是 development 或 production。这个变量主要用于判断构建优化级别，比如是否开启代码压缩、是否生成 sourcemap 等。
 - `__BUILD_VERSION__`：表示应用的版本号，通常与 package.json 中的版本或 Git 提交标签对应。用于版本追踪和问题排查。
@@ -5008,24 +6097,24 @@ flowchart LR
         C[vite.config.ts] --> D[define 配置]
         B --> D
         E[系统时间] --> D
-        
+
         D --> F[源代码静态替换]
         G[源代码文件] --> F
         F --> H[构建产物<br>dist/assets/*.js]
     end
-    
+
     subgraph 运行时
         H --> I[浏览器加载执行]
         I --> J[getBuildInfo()]
         J --> K[BuildInfo 对象]
-        
+
         I --> L[printBuildInfo()]
         L --> M[控制台输出]
-        
+
         I --> N[isDev() / isProd() / ...]
         N --> O[环境判断逻辑]
     end
-    
+
     style D fill:#f9f,stroke:#333,stroke-width:2px
     style F fill:#9f9,stroke:#333,stroke-width:2px
 ```
@@ -5043,25 +6132,34 @@ define: {
 },
 ```
 
-**构建信息工具模块**（`src/utils/buildInfo.ts`）：
+**构建信息工具模块（带详细注释）：**
 
 ```typescript
+// 构建信息接口
 export interface BuildInfo {
-  version: string;
-  env: string;
-  buildTime: string;
-  appEnv: string;
+  version: string; // 应用版本号
+  env: string; // 构建环境（Vite mode）
+  buildTime: string; // 构建时间（ISO 格式）
+  appEnv: string; // 应用运行环境（development/test/staging/production）
 }
 
+/**
+ * 获取构建信息对象
+ * 所有 __BUILD_* 变量在构建时被 Vite 静态替换为字面量值
+ */
 export function getBuildInfo(): BuildInfo {
   return {
-    version: __BUILD_VERSION__ || "1.0.0",
-    env: __BUILD_ENV__ || "development",
-    buildTime: __BUILD_TIME__ || "",
-    appEnv: __APP_ENV__ || "development",
+    version: __BUILD_VERSION__ || "1.0.0", // 构建版本号，默认 "1.0.0"
+    env: __BUILD_ENV__ || "development", // 构建模式
+    buildTime: __BUILD_TIME__ || "", // 构建时间戳
+    appEnv: __APP_ENV__ || "development", // 运行环境
   };
 }
 
+/**
+ * 在控制台打印构建信息
+ * 应用启动时调用，方便开发者快速确认当前运行的版本和环境
+ */
 export function printBuildInfo(): void {
   const info = getBuildInfo();
   console.group(
@@ -5075,20 +6173,27 @@ export function printBuildInfo(): void {
   console.groupEnd();
 }
 
+/**
+ * 判断是否为开发环境
+ */
 export function isDev(): boolean {
   return __APP_ENV__ === "development";
 }
 
+/**
+ * 判断是否为生产环境
+ */
 export function isProd(): boolean {
   return __APP_ENV__ === "production";
 }
 ```
 
-**应用启动时调用**（`src/main.ts:21-22`）：
+**应用启动时调用（带详细注释）：**
 
 ```typescript
-setupLogger();
-printBuildInfo();
+// main.ts 中的应用初始化
+setupLogger(); // 初始化日志系统
+printBuildInfo(); // 打印构建信息到控制台
 ```
 
 ---
@@ -5100,6 +6205,7 @@ printBuildInfo();
 环境配置完善是前端项目工程化的基础工作，通过为不同的运行环境（开发、测试、预发布、生产）提供独立的配置文件，使得同一份代码可以在不同环境中运行时使用不同的配置参数。这种做法遵循了"构建一次，到处运行"的 DevOps 理念，避免了为不同环境单独打包的繁琐。
 
 项目配置了四个环境的配置文件：
+
 - `.env.development`：开发环境配置
 - `.env.test`：测试环境配置
 - `.env.staging`：预发布环境配置
@@ -5114,6 +6220,7 @@ printBuildInfo();
 **步骤一：创建各环境的配置文件**
 
 在项目根目录下创建四个环境配置文件：
+
 - `.env.development`：开发环境，启用 DevTools、设置环境标识为 development
 - `.env.test`：测试环境，启用 DevTools、设置环境标识为 test
 - `.env.staging`：预发布环境，禁用 DevTools、设置环境标识为 staging
@@ -5142,24 +6249,24 @@ flowchart TD
     B -->|vite build| D[mode=production]
     B -->|vite --mode test| E[mode=test]
     B -->|vite build --mode staging| F[mode=staging]
-    
+
     C --> G[加载 .env.development]
     D --> H[加载 .env.production]
     E --> I[加载 .env.test]
     F --> J[加载 .env.staging]
-    
+
     G --> K[Vite loadEnv]
     H --> K
     I --> K
     J --> K
-    
+
     K --> L[读取 VITE_ 开头的变量]
     L --> M[注入到 import.meta.env]
     L --> N[define 全局常量替换]
-    
+
     M --> O[代码中 import.meta.env 访问]
     N --> P[代码中 __APP_ENV__ 等全局变量]
-    
+
     Q[vite.config.ts 配置] --> R[根据环境变量配置插件]
     Q --> S[根据环境变量配置构建选项]
 ```
@@ -5171,6 +6278,7 @@ flowchart TD
 **约定优于配置**体现在 Vite 的环境变量加载机制上。Vite 规定了环境配置文件的命名规则：`.env` 是所有环境都加载的公共配置，`.env.{mode}` 是特定模式的配置。同时规定了只有以 `VITE_` 开头的环境变量才会被暴露到客户端代码中，这是一种安全约定，防止后端敏感配置（如数据库密码）意外地被打包到前端代码中。
 
 **环境隔离**是环境配置的核心目标。四个环境分别对应软件开发的不同阶段：
+
 - **开发环境（development）**：开发者本地开发使用，配置最宽松，开启所有调试工具（DevTools），可以使用 Mock 数据，方便快速开发和调试。
 - **测试环境（test）**：测试人员进行功能测试使用，保持与生产环境相近的配置，但保留 DevTools 便于测试人员排查问题。
 - **预发布环境（staging）**：正式发布前的验证环境，配置与生产环境完全一致，用于验证代码在生产级配置下是否正常运行。
@@ -5179,6 +6287,7 @@ flowchart TD
 通过这种多环境配置，代码在不同环境之间迁移时不需要修改任何代码，只需要通过 mode 参数切换配置即可。这大大降低了因配置错误导致的线上问题风险。
 
 **环境变量的访问方式**有两种：
+
 1. `import.meta.env.VITE_XXX`：这是 Vite 官方推荐的方式，类型支持好，有智能提示。
 2. 全局常量（如 `__APP_ENV__`）：通过 define 配置注入，构建时静态替换，性能更好，但需要额外的类型声明。
 
@@ -5194,26 +6303,26 @@ flowchart LR
         D[.env.staging] --> B
         E[.env.production] --> B[Vite loadEnv]
     end
-    
+
     subgraph 构建阶段
         B --> F[import.meta.env 对象]
         B --> G[define 全局常量]
-        
+
         F --> H[源代码静态分析]
         G --> H
         H --> I[构建产物]
     end
-    
+
     subgraph 运行时
         I --> J[import.meta.env 访问]
         I --> K[全局常量访问]
-        
+
         J --> L[API 基础地址配置]
         J --> M[功能开关控制]
         K --> N[环境判断逻辑]
         K --> O[构建信息展示]
     end
-    
+
     style B fill:#f9f,stroke:#333,stroke-width:2px
     style H fill:#9f9,stroke:#333,stroke-width:2px
 ```
@@ -5252,7 +6361,7 @@ export default defineConfig(({ mode }) => {
   const buildTime = new Date().toISOString();
   const buildVersion = env.VITE_APP_VERSION || "1.0.0";
   const buildEnv = mode;
-  
+
   // ...
 });
 ```
@@ -5273,11 +6382,11 @@ proxy: {
 
 ```javascript
 if (import.meta.env.DEV) {
-  console.group('[Vue Error]')
-  console.error(error)
-  console.log('Component:', errorData.componentName)
-  console.log('Info:', info)
-  console.groupEnd()
+  console.group("[Vue Error]");
+  console.error(error);
+  console.log("Component:", errorData.componentName);
+  console.log("Info:", info);
+  console.groupEnd();
 }
 ```
 
@@ -5285,7 +6394,7 @@ if (import.meta.env.DEV) {
 
 ## 总结
 
-阶段四（监控与运维P3）的五个功能模块共同构成了完整的前端监控与运维体系：
+阶段四（监控与运维 P3）的五个功能模块共同构成了完整的前端监控与运维体系：
 
 1. **性能监控系统**：负责采集页面性能数据，帮助优化用户体验
 2. **行为埋点系统**：负责追踪用户行为，支持业务数据分析

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { setLocale } from "@/locales";
 
 /**
  * 应用全局状态管理 Store
@@ -88,7 +89,7 @@ export const useAppStore = defineStore(
      */
     const setLanguage = (lang) => {
       language.value = lang;
-      // 这里后续会对接 i18n
+      setLocale(lang);
     };
 
     /**

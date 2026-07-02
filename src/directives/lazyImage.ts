@@ -1,4 +1,4 @@
-import { type Directive, type App } from "vue";
+import { type Directive } from "vue";
 
 const imageLazyDirective: Directive<HTMLImageElement, string> = {
   mounted(el, binding) {
@@ -47,9 +47,5 @@ const imageLazyDirective: Directive<HTMLImageElement, string> = {
     }
   },
 };
-
-export function setupLazyImageDirective(app: App): void {
-  app.directive("lazy", imageLazyDirective);
-}
 
 export default imageLazyDirective;
