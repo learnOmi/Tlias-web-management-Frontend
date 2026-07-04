@@ -1,3 +1,15 @@
+<!--
+  ProTable: 高级业务表格组件
+  核心设计思想：
+  1. 配置驱动：通过 searchColumns/columns JSON 配置快速生成搜索项和表格列，减少模板冗余。
+  2. 高内聚低耦合：将【搜索区、工具栏、表格、分页】四大区域封装一体，通过插槽保留高度定制能力。
+  3. 半受控模式：
+     - 分页/数据：提供受控通道（props 同步 + emit 通知），内部维护状态即时响应，依赖父组件回传更新。
+     - 搜索表单：纯非受控，内部自治，仅通过 emit 提交最终结果。
+  4. 插槽设计：
+     - 具名插槽覆盖区域级定制（search, toolbar-left, action）。
+     - 动态具名插槽 `column-[prop]` 实现列级定制，无需重写整个表格。
+-->
 <template>
   <div class="pro-table">
     <div class="pro-table-search" v-if="showSearch">
@@ -119,6 +131,7 @@
         align="center"
       />
       <el-table-column type="index" label="序号" width="60" align="center" />
+      <!-- 动态列渲染：支持通过 column-[prop] 插槽自定义列内容，否则渲染默认文本列 -->
       <template v-for="col in columnConfigs" :key="col.prop">
         <slot :name="`column-${col.prop}`" :col="col">
           <el-table-column
@@ -130,6 +143,7 @@
           />
         </slot>
       </template>
+      <!-- 操作列：仅当父组件传入 action 插槽时渲染，通过作用域插槽暴露行数据 -->
       <el-table-column
         v-if="$slots.action"
         label="操作"
@@ -218,6 +232,7 @@ const props = withDefaults(defineProps<Props>(), {
   skeletonRows: 5,
 });
 
+// 列配置降级策略：优先使用 columns，否则从 searchColumns 提取基础结构
 const tableColumns = computed(() => {
   if (props.columns.length > 0) return props.columns;
   return props.searchColumns.map((sc) => ({
@@ -227,6 +242,7 @@ const tableColumns = computed(() => {
   }));
 });
 
+// 接入列状态管理组合式函数，支持列的显隐切换与持久化重置
 const {
   columns: columnConfigs,
   toggleColumn,
@@ -260,26 +276,25 @@ const emit = defineEmits<{
 const tableRef = ref();
 const selected = ref<any[]>([]);
 
+// 搜索表单状态：纯非受控，内部自治
 const searchForm = reactive<Record<string, any>>({});
+
+// 分页状态：半受控模式，内部维护状态即时响应用户操作，同时 watch props 实现与父组件的同步
 const pagination = reactive({
   page: props.page,
   pageSize: props.pageSize,
 });
 
+// 父组件翻页/改每页条数时同步
 watch(
-  () => props.page,
-  (val) => {
-    pagination.page = val;
+  () => ({ page: props.page, pageSize: props.pageSize }),
+  ({ page, pageSize }) => {
+    pagination.page = page;
+    pagination.pageSize = pageSize;
   }
 );
 
-watch(
-  () => props.pageSize,
-  (val) => {
-    pagination.pageSize = val;
-  }
-);
-
+// 父组件数据变化时更新
 const tableData = ref(props.data);
 watch(
   () => props.data,
@@ -289,7 +304,7 @@ watch(
 );
 
 function handleSearch() {
-  pagination.page = 1;
+  pagination.page = 1; // 搜索时重置页码
   emit("search", { ...searchForm });
 }
 
@@ -331,6 +346,7 @@ function clearSelection() {
   tableRef.value?.clearSelection();
 }
 
+// 暴露必要接口，允许父组件通过 ref 主动介入（如清空选中、读取内部状态）
 defineExpose({
   clearSelection,
   searchForm,

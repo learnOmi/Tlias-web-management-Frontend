@@ -23,7 +23,8 @@ const NO_RETRY_METHODS = ["POST", "PUT", "DELETE"];
 
 // ========== 状态管理 ==========
 
-// 请求队列（用于取消请求）
+// 请求去重队列：key → { controller, cancel }
+// controller 用于 AbortController 取消，cancel 是兼容旧逻辑的标记函数
 const pendingRequests = new Map();
 
 // 全局 Loading 实例
@@ -45,18 +46,18 @@ const generateRequestKey = (config) => {
 };
 
 /**
- * 添加请求到队列
+ * 添加请求到队列（用于去重和取消）
  * @param {object} config
  */
 const addPendingRequest = (config) => {
   const key = generateRequestKey(config);
   if (pendingRequests.has(key)) {
     // 取消之前的重复请求
-    pendingRequests.get(key)();
+    pendingRequests.get(key).controller.abort();
   }
-  config.cancelToken = new axios.CancelToken((cancel) => {
-    pendingRequests.set(key, cancel);
-  });
+  const controller = new AbortController();
+  config.signal = controller.signal;
+  pendingRequests.set(key, { controller });
 };
 
 /**
@@ -74,7 +75,7 @@ const removePendingRequest = (config) => {
  * 取消所有请求（路由切换时调用）
  */
 export const cancelAllRequests = () => {
-  pendingRequests.forEach((cancel) => cancel());
+  pendingRequests.forEach(({ controller }) => controller.abort());
   pendingRequests.clear();
 };
 
@@ -281,6 +282,9 @@ instance.interceptors.request.use(
     return config;
   },
   (error) => {
+    if (error.config) {
+      removePendingRequest(error.config);
+    }
     hideLoading();
     ElMessage.error("请求发送失败");
     return Promise.reject(error);
@@ -343,9 +347,14 @@ instance.interceptors.response.use(
 
     hideLoading();
 
-    if (axios.isCancel(error)) {
+    // 请求被取消（AbortController 或路由切换），不弹错误提示
+    if (
+      error.name === "CanceledError" ||
+      error.code === "ERR_CANCELED" ||
+      axios.isCancel(error)
+    ) {
       if (import.meta.env.DEV) {
-        console.log("[取消] 请求被取消", error.message);
+        console.log("[取消] 请求被 AbortController 取消", error.message);
       }
       return Promise.reject(error);
     }
