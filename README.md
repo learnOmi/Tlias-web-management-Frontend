@@ -1,511 +1,731 @@
-# Tlias 智能学习辅助系统 - 前端
+# Tlias Intelligent Learning Assistant System - Frontend
 
-基于 Vue 3 + Vite + Element Plus 构建的企业级学习管理系统前端，涵盖员工管理、学生管理、班级管理、部门管理及数据可视化等完整业务场景。
+An enterprise-level learning management system frontend built with Vue 3 + Vite + Element Plus, covering complete business scenarios including employee management, student management, class management, department management, and data visualization.
 
-## 目录
+## Table of Contents
 
-- [项目简介](#项目简介)
-- [功能模块](#功能模块)
-- [技术栈](#技术栈)
-- [项目结构](#项目结构)
-- [架构概览](#架构概览)
-- [核心模块详解](#核心模块详解)
-- [快速开始](#快速开始)
-- [后端接口配置](#后端接口配置)
-- [开发规范](#开发规范)
-- [构建与部署](#构建与部署)
-- [推荐 IDE](#推荐-ide)
-
----
-
-## 项目简介
-
-Tlias（Training Learning Assistant System）是一个综合培训管理平台，帮助教育机构高效管理员工、学生、班级和部门信息，并提供基于 ECharts 的数据可视化报表。
-
-**核心能力：**
-
-- 多角色权限控制（路由级 + 指令级）
-- 完整的 RESTful CRUD 操作（增删改查 + 批量操作）
-- 企业级表单验证与动态表单（工作履历动态增行）
-- 图片上传（带大小/类型校验）
-- 国际化支持（中文/英文一键切换）
-- 操作日志审计与性能监控（Core Web Vitals）
-- 请求去重、缓存、重试等工程化能力
+- [Project Overview](#project-overview)
+- [Feature Modules](#feature-modules)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+- [Core Module Details](#core-module-details)
+- [Quick Start](#quick-start)
+- [Backend API Configuration](#backend-api-configuration)
+- [Development Guidelines](#development-guidelines)
+- [Build & Deployment](#build--deployment)
+- [Recommended IDE](#recommended-ide)
 
 ---
 
-## 功能模块
+## Project Overview
 
-| 模块       | 路径          | 说明                                               | 权限标识           |
-| ---------- | ------------- | -------------------------------------------------- | ------------------ |
-| 登录认证   | `/login`      | 用户名密码登录，Token 持久化                       | —                  |
-| 首页仪表盘 | `/index`      | 系统概览与快捷入口                                 | —                  |
-| 部门管理   | `/dept`       | 部门信息的增删改查                                 | `system:dept:list` |
-| 员工管理   | `/emp`        | 员工档案管理（含工作履历），支持搜索/分页/批量删除 | `system:emp:list`  |
-| 班级管理   | `/clazz`      | 班级信息维护，含班主任关联                         | `stu:clazz:list`   |
-| 学生管理   | `/stu`        | 学生学籍管理，支持违纪扣分                         | `stu:stu:list`     |
-| 员工报表   | `/report/emp` | 员工性别分布饼图 + 岗位统计柱状图                  | `report:emp:view`  |
-| 学生报表   | `/report/stu` | 学历分布柱状图 + 班级人数柱状图                    | `report:stu:view`  |
-| 日志管理   | `/report/log` | 系统操作日志审计（只读）                           | `report:log:view`  |
-| 密码修改   | 布局页头部    | 在线修改登录密码                                   | —                  |
+Tlias (Training Learning Assistant System) is a comprehensive training management platform that helps educational institutions efficiently manage employee, student, class, and department information, and provides data visualization reports based on ECharts.
 
----
+**Core Capabilities:**
 
-## 技术栈
-
-| 技术                                                  | 版本    | 说明                                      |
-| ----------------------------------------------------- | ------- | ----------------------------------------- |
-| [Vue 3](https://vuejs.org/)                           | ^3.2.38 | 渐进式 JavaScript 框架（Composition API） |
-| [Vite](https://vitejs.dev/)                           | ^3.0.9  | 下一代前端构建工具（HMR / 按需编译）      |
-| [Vue Router](https://router.vuejs.org/)               | ^4.1.5  | Vue.js 官方路由管理器                     |
-| [Element Plus](https://element-plus.org/)             | ^2.4.4  | 基于 Vue 3 的组件库                       |
-| [Axios](https://axios-http.com/)                      | ^1.7.2  | HTTP 客户端（拦截器 / 取消令牌）          |
-| [ECharts](https://echarts.apache.org/)                | ^6.1.0  | 百度开源数据可视化图表库                  |
-| [vue-echarts](https://github.com/echarts/vue-echarts) | ^8.0.1  | ECharts 的 Vue 3 封装组件                 |
-| [Pinia](https://pinia.vuejs.org/)                     | ^3.x    | Vue 状态管理（支持持久化插件）            |
-| [vue-i18n](https://vue-i18n.intlify.dev/)             | ^9.x    | Vue 国际化插件                            |
-| [ESLint](https://eslint.org/)                         | ^8.22.0 | 代码质量检查工具                          |
-| [Prettier](https://prettier.io/)                      | ^2.7.1  | 代码格式化工具                            |
-| [Husky](https://typicode.github.io/husky/)            | —       | Git Hooks 管理                            |
-| [Commitlint](https://commitlint.js.org/)              | —       | Git Commit 信息规范校验                   |
+- Multi-role permission control (route-level + directive-level)
+- Complete RESTful CRUD operations (create, read, update, delete + batch operations)
+- Enterprise-grade form validation and dynamic forms (work experience dynamic row addition)
+- Image upload (with size/type validation)
+- Internationalization support (Chinese/English one-click switch)
+- Operation log auditing and performance monitoring (Core Web Vitals)
+- Engineering capabilities such as request deduplication using `AbortController`, caching, and retry
 
 ---
 
-## 项目结构
+## Feature Modules
+
+| Module          | Path          | Description                                                                                      | Permission         |
+| --------------- | ------------- | ------------------------------------------------------------------------------------------------ | ------------------ |
+| Login           | `/login`      | Username/password login with Token persistence                                                   | —                  |
+| Dashboard       | `/index`      | System overview and quick access                                                                 | —                  |
+| Department Mgmt | `/dept`       | CRUD for department information                                                                  | `system:dept:list` |
+| Employee Mgmt   | `/emp`        | Employee profile management (including work experience), supports search/pagination/batch delete | `system:emp:list`  |
+| Class Mgmt      | `/clazz`      | Class information maintenance with homeroom teacher association                                  | `stu:clazz:list`   |
+| Student Mgmt    | `/stu`        | Student enrollment management with violation points deduction                                    | `stu:stu:list`     |
+| Employee Report | `/report/emp` | Gender distribution pie chart + position statistics bar chart                                    | `report:emp:view`  |
+| Student Report  | `/report/stu` | Education level distribution bar chart + class enrollment bar chart                              | `report:stu:view`  |
+| Log Management  | `/report/log` | System operation log audit (read-only)                                                           | `report:log:view`  |
+| Password Change | Header layout | Online password modification                                                                     | —                  |
+
+---
+
+## Technology Stack
+
+| Technology                                                                  | Version | Description                                                       |
+| --------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| [Vue 3](https://vuejs.org/)                                                 | ^3.2.38 | Progressive JavaScript framework (Composition API)                |
+| [Vite](https://vitejs.dev/)                                                 | ^3.0.9  | Next-generation frontend build tool (HMR / on-demand compilation) |
+| [Vue Router](https://router.vuejs.org/)                                     | ^4.1.5  | Vue.js official router manager                                    |
+| [Element Plus](https://element-plus.org/)                                   | ^2.4.4  | Vue 3-based component library                                     |
+| [Axios](https://axios-http.com/)                                            | ^1.7.2  | HTTP client (interceptors / AbortController)                      |
+| [ECharts](https://echarts.apache.org/)                                      | ^6.1.0  | Baidu open-source data visualization chart library                |
+| [vue-echarts](https://github.com/echarts/vue-echarts)                       | ^8.0.1  | Vue 3 wrapper component for ECharts                               |
+| [Pinia](https://pinia.vuejs.org/)                                           | ^3.0.4  | Vue state management (with `pinia-plugin-persistedstate`)         |
+| [vue-i18n](https://vue-i18n.intlify.dev/)                                   | ^9.14.5 | Vue internationalization plugin                                   |
+| [NProgress](https://github.com/rstacruz/nprogress)                          | ^0.2.0  | Page loading progress bar                                         |
+| [ESLint](https://eslint.org/)                                               | ^8.22.0 | Code quality checking tool                                        |
+| [Prettier](https://prettier.io/)                                            | ^2.7.1  | Code formatting tool                                              |
+| [Husky](https://typicode.github.io/husky/)                                  | ^9.1.7  | Git Hooks management                                              |
+| [Commitlint](https://commitlint.js.org/)                                    | ^21.2.0 | Git Commit message specification validation                       |
+| [lint-staged](https://github.com/okonet/lint-staged)                        | ^17.0.8 | Run linters on staged git files                                   |
+| [rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer) | ^7.0.1  | Bundle size visualization                                         |
+
+---
+
+## Project Structure
 
 ```
 src/
-├── api/                    # 接口请求模块 — 每个业务域一个文件，统一使用封装后的 axios 实例
-│   ├── clazz.js            # 班级 CRUD + 下拉列表
-│   ├── dept.js             # 部门 CRUD
-│   ├── emp.js              # 员工 CRUD + 部门下拉
-│   ├── log.js              # 操作日志分页查询
-│   ├── login.js            # 登录接口
-│   ├── password.js         # 密码修改
-│   ├── report.js           # 报表数据接口
-│   └── student.js          # 学生 CRUD + 违纪扣分
-├── assets/                 # 静态资源（图片、全局样式）
-├── components/             # 全局组件
-│   ├── common/             #   通用业务组件（ProTable、ProFormDialog、ImageUpload 等）
-│   └── ErrorBoundary.vue   #   错误边界组件（捕获子树异常）
-├── composables/            # 组合式函数（可复用逻辑）
-│   ├── useRequestCache.ts  #   请求缓存 Hook
-│   ├── useShortcuts.ts     #   键盘快捷键 Hook
-│   └── useTableColumns.ts  #   表格列显隐控制 Hook
-├── directives/             # 自定义指令
-│   ├── permission.js       #   v-permission — 按钮级权限控制
-│   ├── lazyImage.ts        #   v-lazy — 图片懒加载
-│   └── role.js             #   v-role — 角色级显示控制
-├── locales/                # 国际化翻译文件（zh-CN / en-US）
-├── monitor/                # 监控与埋点
-│   ├── performance.ts      #   性能指标采集（Core Web Vitals）
-│   ├── track.ts            #   行为埋点（页面浏览 + 点击追踪）
-│   └── index.ts            #   监控初始化入口
-├── router/                 # 路由配置
-│   └── index.js            #   路由表 + 全局守卫（鉴权 + 权限）
-├── stores/                 # Pinia 状态管理
-│   ├── modules/
-│   │   ├── app.js          #   应用全局状态（主题/语言/侧边栏/缓存视图）
-│   │   ├── dict.js         #   字典数据（岗位/学历/性别映射）
-│   │   └── user.js         #   用户状态（Token/角色/权限）
-├── types/                  # TypeScript 类型定义
-│   └── index.ts            #   所有接口/实体类型
-├── utils/                  # 工具函数
-│   ├── axios.js            #   Axios 实例封装（拦截器/去重/缓存/重试）
-│   ├── errorHandler.js     #   全局错误处理（Vue + Window）
-│   ├── logger.ts           #   分级日志工具
-│   └── buildInfo.ts        #   构建元信息（版本号/环境/时间）
-├── views/                  # 页面组件
-│   ├── login/              #   登录页（动画背景 + 表单校验）
-│   ├── layout/             #   主布局（顶栏 + 侧边栏 + 内容区）
-│   ├── index/              #   首页仪表盘
-│   ├── dept/               #   部门管理
-│   ├── emp/                #   员工管理 + 员工表单弹窗
-│   ├── clazz/              #   班级管理 + 班级表单弹窗
-│   ├── stu/                #   学生管理 + 学生表单弹窗
-│   ├── log/                #   日志管理（只读）
-│   ├── report/             #   报表模块
-│   │   ├── emp/            #     员工统计报表
-│   │   └── stu/            #     学生统计报表
-│   └── error/              #   错误页（403 / 404 / 500）
-├── App.vue                 # 根组件
-└── main.ts                 # 应用入口（初始化流程）
+├── api/                    # API request modules — one file per business domain, using wrapped axios instance
+│   ├── clazz.js            # Class CRUD + dropdown options
+│   ├── dept.js             # Department CRUD
+│   ├── emp.js              # Employee CRUD + department dropdown
+│   ├── log.js              # Operation log pagination query
+│   ├── login.js            # Login API
+│   ├── password.js         # Password change
+│   ├── report.js           # Report data API
+│   └── student.js          # Student CRUD + violation points
+├── assets/                 # Static assets (images, global styles)
+├── components/             # Global components
+│   ├── common/             #   Common business components
+│   │   ├── ProTable.vue    #     Advanced table with search/toolbar/pagination/skeleton
+│   │   ├── ProFormDialog.vue # Form dialog with validation and initial data sync
+│   │   ├── ImageUpload.vue #   Image upload with size/type validation
+│   │   ├── DictTag.vue     #   Dictionary tag component
+│   │   ├── PageHeader.vue  #   Page header component
+│   │   ├── TableSkeleton.vue # Loading skeleton for tables
+│   │   └── index.ts        #   Component registration
+│   └── ErrorBoundary.vue   # Error boundary component (catches subtree exceptions)
+├── composables/            # Composables (reusable logic)
+│   ├── useRequestCache.ts  # Request cache hook (LRU, max 200 entries, 5-minute TTL)
+│   ├── useShortcuts.ts     # Keyboard shortcuts hook
+│   └── useTableColumns.ts  # Table column visibility control hook with localStorage persistence
+├── directives/             # Custom directives
+│   ├── permission.js       # v-permission — button-level permission control (removes element)
+│   ├── lazyImage.ts        # v-lazy — IntersectionObserver-based image lazy loading
+│   ├── role.js             # v-role — role-level display control (removes element)
+│   └── index.ts            # Directive registration
+├── locales/                # Internationalization translation files
+│   ├── index.ts            # i18n configuration and setLocale function
+│   ├── zh-CN.ts            # Chinese translations (12 namespaces)
+│   └── en-US.ts            # English translations
+├── monitor/                # Monitoring and tracking
+│   ├── performance.ts      # Performance metric collection (Core Web Vitals)
+│   ├── track.ts            # Behavior tracking (page view + click tracking)
+│   └── index.ts            # Monitoring initialization and event listeners
+├── router/                 # Route configuration
+│   └── index.js            # Route table + global guards (authentication + permission)
+├── stores/                 # Pinia state management
+│   ├── index.js            # Pinia initialization with persistence plugin
+│   └── modules/
+│       ├── app.js          # App global state (theme/language/sidebar/cached views/global loading)
+│       ├── dict.js         # Dictionary data (position/education/gender mapping)
+│       └── user.js         # User state (Token/roles/permissions)
+├── types/                  # TypeScript type definitions
+│   └── index.ts            # All API/entity types
+├── utils/                  # Utility functions
+│   ├── axios.js            # Axios instance wrapper (interceptors/AbortController/cache/retry)
+│   ├── errorHandler.js     # Global error handling (5 error types: VUE/RESOURCE/PROMISE/NETWORK/JS)
+│   ├── logger.ts           # Graded logging utility
+│   └── buildInfo.ts        # Build metadata (version/environment/time)
+├── views/                  # Page components
+│   ├── login/              # Login page (animated background + form validation)
+│   ├── layout/             # Main layout (top bar + sidebar + content area + PasswordDialog)
+│   ├── index/              # Dashboard homepage
+│   ├── dept/               # Department management
+│   ├── emp/                # Employee management + EmpFormDialog
+│   ├── clazz/              # Class management + ClazzFormDialog
+│   ├── stu/                # Student management + StuFormDialog
+│   ├── log/                # Log management (read-only)
+│   ├── report/             # Report module
+│   │   ├── emp/            # Employee statistics report
+│   │   └── stu/            # Student statistics report
+│   └── error/              # Error pages (403 / 404 / 500)
+├── App.vue                 # Root component
+├── main.ts                 # App entry point (initialization flow)
+└── vite-env.d.ts           # Vite environment type definitions
 ```
 
 ---
 
-## 架构概览
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    用户浏览器                         │
+│                    User Browser                     │
 │                                                     │
 │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐   │
-│  │ 登录页    │  │ 主布局    │  │ 各业务页面        │   │
+│  │  Login   │  │  Layout  │  │  Business Pages  │   │
 │  │ /login   │  │ /        │  │ /dept, /emp...  │   │
 │  └────┬─────┘  └────┬─────┘  └────────┬─────────┘   │
 │       │             │                  │              │
 │  ┌────▼─────────────▼──────────────────▼─────────┐   │
-│  │              Vue Router (路由守卫)              │   │
-│  │  • 白名单放行  • Token 校验  • 权限校验          │   │
+│  │              Vue Router (Route Guards)          │   │
+│  │  • Whitelist bypass  • Token validation       │   │
+│  │  • Permission check                           │   │
 │  └──────────────────┬────────────────────────────┘   │
 │                     │                                 │
 │  ┌──────────────────▼────────────────────────────┐   │
-│  │              Axios 封装 (utils/axios.js)        │   │
-│  │  • 请求去重 (CancelToken)  • 响应缓存           │   │
-│  │  • Token 注入        • 全局 Loading            │   │
-│  │  • 错误拦截        • 自动重试 (GET)             │   │
+│  │              Axios Wrapper (utils/axios.js)     │   │
+│  │  • Request deduplication (AbortController)    │   │
+│  │  • Response caching (LRU Map)                 │   │
+│  │  • Token injection (header: token)            │   │
+│  │  • Global Loading (counter-controlled)        │   │
+│  │  • Error interception • Auto retry (GET)      │   │
 │  └──────────────────┬────────────────────────────┘   │
 │                     │                                 │
 │  ┌──────────────────▼────────────────────────────┐   │
 │  │              Pinia Stores                      │   │
-│  │  • user (Token/权限)   • app (主题/语言)       │   │
-│  │  • dict (字典映射)                            │   │
+│  │  • user (Token/permissions/persistence)       │   │
+│  │  • app (theme/language/sidebar/loading)       │   │
+│  │  • dict (dictionary mapping)                  │   │
 │  └───────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
                      │
                      ▼
             ┌────────────────┐
-            │  后端 API       │
-            │  localhost:8080 │
+            │  Backend API   │
+            │  localhost:8080│
             └────────────────┘
 ```
 
 ---
 
-## 核心模块详解
+## Core Module Details
 
-> 本节逐一介绍项目中用到的每个模块和技术，帮助你深入理解整体架构。
+> This section introduces each module and technology used in the project based on actual code implementation.
 
-### 1. Axios 封装 (`src/utils/axios.js`)
+### 1. Axios Wrapper (`src/utils/axios.js`)
 
-项目自研了一个增强版 Axios 实例，封装了以下企业级能力：
+The project has developed an enhanced Axios instance with the following enterprise-grade capabilities:
 
-| 能力             | 说明                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| **请求去重**     | 使用 `axios.CancelToken`，相同 URL + 参数的并发请求自动取消旧请求，避免重复网络开销              |
-| **响应缓存**     | GET 请求开启 `cache: true` 后，响应会被缓存（最多 200 条，5 分钟过期），后续相同请求直接返回缓存 |
-| **Token 注入**   | 请求拦截器自动从 Pinia 获取 Token 并附加到请求头（登录页等白名单接口除外）                       |
-| **全局 Loading** | 使用 `ElLoading.service` 显示全屏加载遮罩，嵌套并发请求不会闪烁（计数器控制）                    |
-| **统一响应处理** | 后端约定 `{ code: 1 }` 为成功，自动解包 `data`；`code !== 1` 时弹出错误提示                      |
-| **401 自动登出** | 检测到 401 时清除用户数据并重定向到登录页                                                        |
-| **自动重试**     | GET 请求在超时或网络错误时自动重试（最多 2 次，间隔 1 秒），POST/PUT/DELETE 不重试以防幂等性问题 |
+| Feature                       | Implementation                                                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Request Deduplication**     | Uses `AbortController` (not `axios.CancelToken`), auto-cancels old concurrent requests with the same URL + parameters |
+| **Response Caching**          | GET requests with `cache: true` are cached in a Map (max 200 entries, 5-minute TTL, LRU eviction)                     |
+| **Token Injection**           | Request interceptor automatically fetches Token from Pinia and sets `config.headers["token"]` (not `Authorization`)   |
+| **Global Loading**            | Uses `ElLoading.service` with counter-controlled display, nested concurrent requests don't flicker                    |
+| **Unified Response Handling** | Backend convention `{ code: 1 }` for success, auto-unwraps response; shows error notification when `code !== 1`       |
+| **401 Auto Logout**           | Clears user data and redirects to `/login` when 401 is detected                                                       |
+| **Auto Retry**                | GET requests auto-retry on timeout or network errors (max 2 times, 1-second interval), POST/PUT/DELETE don't retry    |
 
-**后端响应约定：**
+**Backend Response Convention:**
 
 ```typescript
-// 所有接口统一返回格式
 {
-  code: 1,        // 1=成功, 0=失败
-  msg: "操作成功",  // 提示信息
-  data: { ... }   // 业务数据
+  code: 1,        // 1=success, 0=failed
+  msg: "Operation successful",
+  data: { ... }   // Business data
 }
 ```
 
-**使用方式：**
+**Usage:**
 
 ```javascript
-// 所有 API 模块统一导入封装后的实例
 import axios from "@/utils/axios";
 
-// 基本用法
 export function getEmpList(params) {
   return axios.get("/emps", { params });
 }
 
-// 开启缓存
 export function getDeptList() {
   return axios.get("/depts", { cache: true });
 }
 ```
 
-### 2. 路由与权限 (`src/router/index.js`)
+**Exported Functions:**
 
-路由采用 **懒加载**（代码分割）策略，每个页面独立 chunk，首屏仅加载必要代码。
+| Function              | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| `cancelAllRequests()` | Aborts all pending requests (called during route navigation) |
+| `showLoading(text)`   | Shows global loading mask                                    |
+| `hideLoading()`       | Hides global loading mask                                    |
+| `clearCache(pattern)` | Clears cached responses (optional pattern filter)            |
 
-**路由守卫流程：**
+### 2. Routing & Permission (`src/router/index.js`)
+
+Routes use **lazy loading** (code splitting) strategy. The router uses `createWebHistory` mode.
+
+**Route Guard Flow:**
 
 ```
-访问页面
-  ├─ 开始 NProgress 进度条
-  ├─ 取消所有待处理 HTTP 请求（清理旧路由残留）
-  ├─ 白名单判断（/login, /403, /404, /500 无需登录）
-  ├─ 已登录用户访问 /login → 重定向到 /index
-  ├─ 未登录 → 重定向到 /login
-  ├─ 有 meta.permission → 调用 userStore.hasPermission() 校验
-  │   └─ 无权限 → 重定向到 /403
-  └─ 放行
+Access Page
+  ├─ Start NProgress bar
+  ├─ Cancel all pending HTTP requests (cancelAllRequests)
+  ├─ Whitelist check (/login, /403, /404, /500 don't require login)
+  ├─ Logged-in user accessing /login → redirect to /index
+  ├─ Not logged in → redirect to /login
+  ├─ Has meta.permission → call userStore.hasPermission() to verify
+  │   └─ No permission → redirect to /403
+  └─ Allow access
 ```
 
-**权限标识约定：**
+**Permission Code Convention:**
 
-每个需要权限的路由在 `meta.permission` 中声明权限码，格式为 `模块:资源:操作`：
+Each route requiring permission declares a permission code in `meta.permission`, format is `module:resource:operation`:
 
-| 路由          | 权限标识           | 含义         |
-| ------------- | ------------------ | ------------ |
-| `/dept`       | `system:dept:list` | 部门列表查看 |
-| `/emp`        | `system:emp:list`  | 员工列表查看 |
-| `/clazz`      | `stu:clazz:list`   | 班级列表查看 |
-| `/stu`        | `stu:stu:list`     | 学生列表查看 |
-| `/report/log` | `report:log:view`  | 日志查看     |
+| Route         | Permission         | Description          |
+| ------------- | ------------------ | -------------------- |
+| `/dept`       | `system:dept:list` | Department list view |
+| `/emp`        | `system:emp:list`  | Employee list view   |
+| `/clazz`      | `stu:clazz:list`   | Class list view      |
+| `/stu`        | `stu:stu:list`     | Student list view    |
+| `/report/log` | `report:log:view`  | Log view             |
 
-**路由元字段说明：**
+**Route Meta Fields:**
 
-| 字段              | 类型               | 说明                                |
-| ----------------- | ------------------ | ----------------------------------- |
-| `meta.title`      | string             | 页面标题（自动设置 document.title） |
-| `meta.permission` | string \| string[] | 所需权限标识                        |
-| `meta.keepAlive`  | boolean            | 是否启用 KeepAlive 缓存             |
+| Field             | Type               | Description                                    |
+| ----------------- | ------------------ | ---------------------------------------------- |
+| `meta.title`      | string             | Page title (automatically sets document.title) |
+| `meta.permission` | string \| string[] | Required permission codes                      |
+| `meta.keepAlive`  | boolean            | Whether to enable KeepAlive caching            |
 
-### 3. 用户状态管理 (`src/stores/modules/user.js`)
+### 3. User State Management (`src/stores/modules/user.js`)
 
-基于 **Pinia** 的用户状态 store，负责管理登录凭证和权限信息：
+Pinia-based user state store with `pinia-plugin-persistedstate` for localStorage persistence.
 
-**存储字段：**
+**Stored Fields:**
 
-| 字段          | 类型     | 说明                             | 持久化                      |
+| Field         | Type     | Description                      | Persistence                 |
 | ------------- | -------- | -------------------------------- | --------------------------- |
 | `token`       | string   | JWT Token                        | localStorage (`tlias-user`) |
 | `userInfo`    | object   | `{ id, username, name, avatar }` | ✓                           |
-| `roles`       | string[] | 角色数组，如 `['admin']`         | ✓                           |
-| `permissions` | string[] | 权限标识数组                     | ✓                           |
+| `roles`       | string[] | Role array, e.g., `['admin']`    | ✓                           |
+| `permissions` | string[] | Permission code array            | ✓                           |
 
-**关键方法：**
+**Computed Properties:**
 
-| 方法            | 参数                                      | 说明                                   |
-| --------------- | ----------------------------------------- | -------------------------------------- |
-| `setLoginData`  | `{ token, userInfo, roles, permissions }` | 登录成功后批量设置                     |
-| `hasPermission` | `string \| string[]`                      | 管理员拥有全部权限；支持单个或数组匹配 |
-| `hasRole`       | `string \| string[]`                      | 角色匹配检查                           |
-| `logout`        | —                                         | 清除所有数据，跳转登录页               |
-| `clearUserData` | —                                         | 接口返回 401 时调用，强制登出          |
+| Property      | Type    | Description                     |
+| ------------- | ------- | ------------------------------- |
+| `isLoggedIn`  | boolean | Whether user is authenticated   |
+| `isAdmin`     | boolean | Whether user has 'admin' role   |
+| `displayName` | string  | Display name (name or username) |
 
-**持久化原理：** 使用 `pinia-plugin-persistedstate` 插件，store 数据自动同步到 localStorage，刷新页面后恢复登录态。
+**Key Methods:**
 
-### 4. 字典管理 (`src/stores/modules/dict.js`)
+| Method          | Parameters                                | Description                                                  |
+| --------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| `setLoginData`  | `{ token, userInfo, roles, permissions }` | Batch set after login success                                |
+| `hasPermission` | `string \| string[]`                      | Admin has all permissions; supports single or array matching |
+| `hasRole`       | `string \| string[]`                      | Role matching check                                          |
+| `logout`        | `skipMessage?: boolean`                   | Clear all data, redirect to login page                       |
+| `clearUserData` | —                                         | Called when API returns 401, force logout                    |
 
-字典 Store 统一管理业务中的**枚举值映射**，将数字编码转换为可读文本：
+### 4. App State Management (`src/stores/modules/app.js`)
 
-| 字典类型     | 映射关系                                           |
-| ------------ | -------------------------------------------------- |
-| `emp_job`    | 1=班主任, 2=讲师, 3=学工主管, 4=教研主管, 5=咨询师 |
-| `stu_degree` | 1=初中, 2=高中, 3=大专, 4=本科, 5=硕士, 6=博士     |
-| `gender`     | 1=男, 2=女                                         |
+Manages global application state with persistence.
 
-**使用方式：**
+**Stored Fields:**
 
-```vue
-<!-- 模板中使用 DictTag 组件 -->
-<DictTag dict-type="emp_job" :value="row.job" />
+| Field               | Type     | Description                        | Persistence                |
+| ------------------- | -------- | ---------------------------------- | -------------------------- |
+| `sidebarCollapsed`  | boolean  | Whether sidebar is collapsed       | localStorage (`tlias-app`) |
+| `theme`             | string   | Current theme (`light`/`dark`)     | ✓                          |
+| `language`          | string   | Current language (`zh-CN`/`en-US`) | ✓                          |
+| `globalLoading`     | boolean  | Global loading state               | —                          |
+| `globalLoadingText` | string   | Global loading text                | —                          |
+| `pageTitle`         | string   | Page title                         | —                          |
+| `cachedViews`       | string[] | KeepAlive cached route names       | —                          |
 
-<!-- 或直接用字典 store -->
-<script setup>
-import { useDictStore } from "@/stores/modules/dict";
-const dictStore = useDictStore();
-const label = dictStore.getDictLabel("emp_job", 1); // "班主任"
-</script>
-```
+**Key Methods:**
 
-> 当前字典为硬编码，预留了 `loadDictFromServer` 接口用于未来从后端动态加载。
+| Method                       | Description                       |
+| ---------------------------- | --------------------------------- |
+| `toggleSidebar()`            | Toggles sidebar collapse state    |
+| `toggleTheme()`              | Switches between light/dark theme |
+| `setLanguage(lang)`          | Sets language and syncs with i18n |
+| `addCachedView(viewName)`    | Adds route to KeepAlive cache     |
+| `removeCachedView(viewName)` | Removes route from cache          |
+| `clearCachedViews()`         | Clears all cached views           |
 
-### 5. 全局组件 (`src/components/common/`)
+### 5. Dictionary Management (`src/stores/modules/dict.js`)
 
-项目封装了一套可复用的业务组件，减少样板代码：
+Dictionary Store centrally manages **enum value mappings** with persistence.
 
-#### ProTable — 高级表格
+**Dictionary Types:**
 
-内置搜索表单、工具栏、分页、骨架屏、列显隐控制的完整表格方案：
+| Type         | Mapping                                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------------------- |
+| `emp_job`    | 1=Homeroom Teacher, 2=Lecturer, 3=Student Affairs Supervisor, 4=Teaching Research Supervisor, 5=Consultant |
+| `stu_degree` | 1=Junior High, 2=Senior High, 3=College, 4=Bachelor, 5=Master, 6=Doctor                                    |
+| `gender`     | 1=Male, 2=Female                                                                                           |
+
+**Key Methods:**
+
+| Method                      | Parameters      | Description                                    |
+| --------------------------- | --------------- | ---------------------------------------------- | ---------------------------- |
+| `getDictByType(type)`       | `string`        | Returns dictionary list by type                |
+| `getDictLabel(type, value)` | `string, number | string`                                        | Returns label for a value    |
+| `getDictItem(type, value)`  | `string, number | string`                                        | Returns full dictionary item |
+| `loadDictFromServer()`      | —               | Reserved method for future backend integration |
+
+### 6. Global Components (`src/components/common/`)
+
+#### ProTable — Advanced Table
+
+Complete table solution with built-in search form, toolbar, pagination, skeleton screen, and column visibility control.
+
+**Props:**
+
+| Prop                    | Type           | Default | Description                           |
+| ----------------------- | -------------- | ------- | ------------------------------------- |
+| `loading`               | boolean        | false   | Loading state                         |
+| `data`                  | array          | []      | Table data                            |
+| `total`                 | number         | 0       | Total records for pagination          |
+| `page`                  | number         | 1       | Current page (semi-controlled)        |
+| `pageSize`              | number         | 10      | Items per page (semi-controlled)      |
+| `searchColumns`         | array          | []      | Search field configuration            |
+| `showSearch`            | boolean        | true    | Show search area                      |
+| `selectable`            | boolean        | false   | Show selection column                 |
+| `addVisible`            | boolean        | false   | Show add button                       |
+| `batchDeleteVisible`    | boolean        | false   | Show batch delete button              |
+| `actionWidth`           | number\|string | 200     | Width of action column                |
+| `columns`               | array          | []      | Column configuration                  |
+| `columnKey`             | string         | ""      | Key for column visibility persistence |
+| `columnSettingsVisible` | boolean        | false   | Show column settings dropdown         |
+| `showSkeleton`          | boolean        | false   | Show skeleton loader                  |
+| `skeletonRows`          | number         | 5       | Number of skeleton rows               |
+
+**Events:**
+
+| Event         | Parameters                  | Description                 |
+| ------------- | --------------------------- | --------------------------- |
+| `search`      | `form: Record<string, any>` | Emitted on search           |
+| `reset`       | —                           | Emitted on reset            |
+| `pageChange`  | `page: number`              | Emitted on page change      |
+| `sizeChange`  | `size: number`              | Emitted on page size change |
+| `add`         | —                           | Emitted on add button click |
+| `batchDelete` | `ids: number[]`             | Emitted on batch delete     |
+
+**Slots:**
+
+| Slot            | Description                        |
+| --------------- | ---------------------------------- |
+| `search`        | Custom search area                 |
+| `search-form`   | Custom search form items           |
+| `toolbar-left`  | Custom toolbar left area           |
+| `toolbar-right` | Custom toolbar right area          |
+| `action`        | Action column content              |
+| `column-[prop]` | Custom column content by prop name |
+
+**Usage:**
 
 ```vue
 <ProTable
-  key="emp"
-  :request="getEmpList"
+  :loading="loading"
+  :data="tableData"
+  :total="total"
+  :page="page"
+  :page-size="pageSize"
+  :search-columns="searchColumns"
   :columns="columns"
-  :search-fields="searchFields"
-  :toolbar="['add', 'batchDelete']"
+  :selectable="true"
+  :add-visible="true"
+  :batch-delete-visible="true"
+  :column-key="'emp-table'"
+  :column-settings-visible="true"
+  @search="handleSearch"
+  @page-change="handlePageChange"
+  @size-change="handleSizeChange"
   @add="handleAdd"
   @batch-delete="handleBatchDelete"
-/>
+>
+  <template #action="{ row }">
+    <el-button size="small" @click="handleEdit(row)">Edit</el-button>
+    <el-button size="small" type="danger" @click="handleDelete(row)">Delete</el-button>
+  </template>
+</ProTable>
 ```
 
-**特性：**
+#### ProFormDialog — Form Dialog
 
-- 搜索区：支持输入框、下拉选择、日期范围
-- 工具栏：自定义按钮（新增、批量删除等）
-- 列设置：每列可独立开关，偏好存入 localStorage
-- 骨架屏：加载中显示占位动画
-- 分页：支持 10/20/50/100 条/页切换
+Encapsulates dialog visibility control, form reference, submit validation logic.
 
-#### ProFormDialog — 表单弹窗
+**Props:**
 
-封装了弹窗的可见性控制、表单引用、提交校验等逻辑：
+| Prop            | Type           | Default | Description                 |
+| --------------- | -------------- | ------- | --------------------------- |
+| `modelValue`    | boolean        | —       | Dialog visibility (v-model) |
+| `title`         | string         | ""      | Dialog title                |
+| `width`         | string\|number | "600px" | Dialog width                |
+| `labelWidth`    | string         | "100px" | Form label width            |
+| `rules`         | FormRules      | {}      | Form validation rules       |
+| `initialData`   | Record         | {}      | Initial form data           |
+| `submitLoading` | boolean        | false   | Submit button loading state |
+
+**Events:**
+
+| Event               | Parameters                      | Description                |
+| ------------------- | ------------------------------- | -------------------------- |
+| `update:modelValue` | `val: boolean`                  | Emitted when dialog closes |
+| `submit`            | `formData: Record<string, any>` | Emitted on valid submit    |
+
+**Exposed Methods:**
+
+| Method        | Description                 |
+| ------------- | --------------------------- |
+| `resetForm()` | Resets form to initial data |
+
+**Usage:**
 
 ```vue
 <ProFormDialog
   v-model="visible"
-  title="编辑员工"
-  :initial-data="currentRow"
+  title="Edit Employee"
   :rules="rules"
+  :initial-data="currentRow"
   @submit="handleSubmit"
 >
-  <!-- 表单内容 -->
+  <el-form-item label="Name" prop="name">
+    <el-input v-model="form.name" />
+  </el-form-item>
 </ProFormDialog>
 ```
 
-#### ImageUpload — 图片上传
+#### ImageUpload — Image Upload
 
-封装了 Element Plus Upload 组件，对接 `/api/upload` 接口：
+Encapsulates Element Plus Upload component, integrates with `/api/upload` endpoint. Automatically injects Token into upload headers.
 
-```vue
-<ImageUpload v-model="form.avatar" :max-size="2" alt="员工头像" />
-```
+**Props:**
 
-内置校验：图片类型（jpg/png/gif）、文件大小（默认 2MB）。
+| Prop          | Type           | Default    | Description          |
+| ------------- | -------------- | ---------- | -------------------- |
+| `modelValue`  | string         | ""         | Image URL (v-model)  |
+| `maxSize`     | number         | 2          | Max file size in MB  |
+| `alt`         | string         | ""         | Alt text for preview |
+| `placeholder` | string         | "上传图片" | Placeholder text     |
+| `width`       | number\|string | 100        | Preview width in px  |
+| `height`      | number\|string | 100        | Preview height in px |
 
-#### DictTag — 字典标签
+**Events:**
 
-将数字编码渲染为彩色 Tag：
+| Event               | Parameters    | Description               |
+| ------------------- | ------------- | ------------------------- |
+| `update:modelValue` | `val: string` | Emitted on upload success |
+| `change`            | `url: string` | Emitted on upload success |
+
+#### DictTag — Dictionary Tag
+
+Renders numeric codes as colored Tags.
+
+**Props:**
+
+| Prop       | Type           | Description      |
+| ---------- | -------------- | ---------------- |
+| `dictType` | string         | Dictionary type  |
+| `value`    | number\|string | Dictionary value |
+
+**Usage:**
 
 ```vue
 <DictTag dict-type="gender" :value="1" />
-<!-- 输出：<el-tag>男</el-tag> -->
+<!-- Output: <el-tag>Male</el-tag> -->
 ```
 
-#### TableSkeleton — 骨架屏
+#### TableSkeleton — Skeleton Screen
 
-加载中占位组件，支持自定义行列数和高度：
+Loading placeholder component with customizable rows, columns, and height. Includes shimmer animation effect.
 
-```vue
-@TableSkeleton :rows="5" :columns="8" />
-```
+**Props:**
 
-### 6. 自定义指令 (`src/directives/`)
+| Prop           | Type     | Default | Description                                                     |
+| -------------- | -------- | ------- | --------------------------------------------------------------- |
+| `rows`         | number   | 5       | Number of skeleton rows                                         |
+| `columns`      | number   | 4       | Number of columns per row                                       |
+| `rowHeight`    | number   | 48      | Height of each row                                              |
+| `columnWidths` | string[] | []      | Custom width for each column (e.g., `['100px', '20%', 'auto']`) |
 
-| 指令           | 用法                                                          | 说明                            |
-| -------------- | ------------------------------------------------------------- | ------------------------------- |
-| `v-permission` | `<el-button v-permission="'system:emp:add'">新增</el-button>` | 无权限时从 DOM 移除元素         |
-| `v-role`       | `<div v-role="'admin'">管理员专属</div>`                      | 角色不匹配时隐藏                |
-| `v-lazy`       | `<img v-lazy="imageUrl" />`                                   | IntersectionObserver 懒加载图片 |
+#### PageHeader — Page Header
 
-### 7. 组合式函数 (`src/composables/`)
+Page header component with title, description, back button, and extra slot.
 
-| 函数                   | 用途                                          |
-| ---------------------- | --------------------------------------------- |
-| `useTableColumns(key)` | 表格列显隐控制 + localStorage 持久化          |
-| `useShortcuts()`       | 注册键盘快捷键（如 Ctrl+K 聚焦搜索框）        |
-| `useRequestCache()`    | 请求缓存 Hook（LRU，最大 200 条，5 分钟过期） |
+**Props:**
 
-### 8. 监控与埋点 (`src/monitor/`)
+| Prop          | Type    | Default | Description                                  |
+| ------------- | ------- | ------- | -------------------------------------------- |
+| `title`       | string  | —       | Page title                                   |
+| `description` | string  | ""      | Page description                             |
+| `showBack`    | boolean | false   | Show back button                             |
+| `backPath`    | string  | ""      | Custom back path (defaults to router.back()) |
 
-#### 性能监控 (`performance.ts`)
+**Slots:**
 
-利用浏览器 Performance API 采集 Core Web Vitals 指标：
+| Slot    | Description                     |
+| ------- | ------------------------------- |
+| `extra` | Extra content on the right side |
 
-| 指标                               | 含义             | 采集方式                                       |
-| ---------------------------------- | ---------------- | ---------------------------------------------- |
-| **FCP** (First Contentful Paint)   | 首次内容绘制时间 | PerformanceObserver `paint`                    |
-| **FP** (First Paint)               | 首次绘制时间     | PerformanceObserver `paint`                    |
-| **LCP** (Largest Contentful Paint) | 最大内容绘制时间 | PerformanceObserver `largest-contentful-paint` |
-| **CLS** (Cumulative Layout Shift)  | 累积布局偏移     | PerformanceObserver `layout-shift`             |
-| **TTFB** (Time to First Byte)      | 首字节时间       | Navigation Timing API                          |
+### 7. Custom Directives (`src/directives/`)
 
-生产环境通过 `navigator.sendBeacon` 上报到 `/api/log/track`，不影响页面卸载。
+| Directive      | Usage                                                        | Description                                      |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------ |
+| `v-permission` | `<el-button v-permission="'system:emp:add'">Add</el-button>` | Removes element from DOM when no permission      |
+| `v-role`       | `<div v-role="'admin'">Admin Only</div>`                     | Removes element from DOM when role doesn't match |
+| `v-lazy`       | `<img v-lazy="imageUrl" />`                                  | IntersectionObserver-based image lazy loading    |
 
-#### 行为埋点 (`track.ts`)
+### 8. Composables (`src/composables/`)
 
-基于 `data-track` 属性自动追踪点击事件，支持批量上报（最多 10 条/批，5 秒节流）：
+| Function                   | Purpose                                                                                                                                       |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useTableColumns(options)` | Table column visibility control + localStorage persistence, returns `{ columns, visibleColumns, toggleColumn, resetColumns, setColumnWidth }` |
+| `useShortcuts()`           | Register keyboard shortcuts                                                                                                                   |
+| `useRequestCache()`        | Request cache hook (LRU, max 200 entries, 5-minute TTL)                                                                                       |
+
+**useTableColumns Options:**
+
+| Option           | Type           | Description                         |
+| ---------------- | -------------- | ----------------------------------- |
+| `key`            | string         | Unique storage key for localStorage |
+| `defaultColumns` | ColumnConfig[] | Default column configuration        |
+
+**useTableColumns Return Value:**
+
+| Property/Method               | Type     | Description                      |
+| ----------------------------- | -------- | -------------------------------- |
+| `columns`                     | ref      | Full column configuration        |
+| `visibleColumns`              | ref      | Visible columns only             |
+| `toggleColumn(prop)`          | function | Toggle column visibility by prop |
+| `resetColumns()`              | function | Reset to default configuration   |
+| `setColumnWidth(prop, width)` | function | Set width for specific column    |
+
+### 9. Monitoring & Tracking (`src/monitor/`)
+
+#### Performance Monitoring (`performance.ts`)
+
+Uses browser Performance API to collect Core Web Vitals metrics:
+
+| Metric                             | Description                | Collection Method                              |
+| ---------------------------------- | -------------------------- | ---------------------------------------------- |
+| **FCP** (First Contentful Paint)   | First content paint time   | PerformanceObserver `paint`                    |
+| **FP** (First Paint)               | First paint time           | PerformanceObserver `paint`                    |
+| **LCP** (Largest Contentful Paint) | Largest content paint time | PerformanceObserver `largest-contentful-paint` |
+| **CLS** (Cumulative Layout Shift)  | Cumulative layout shift    | PerformanceObserver `layout-shift`             |
+| **TTFB** (Time to First Byte)      | Time to first byte         | Navigation Timing API                          |
+
+Production environment reports via `navigator.sendBeacon` to `/api/log/track`.
+
+#### Behavior Tracking (`track.ts`)
+
+Auto-tracks click events based on `data-track` attribute, supports batch reporting (max 10 items/batch, 5-second throttle):
 
 ```html
-<button data-track="click:btn_login">登录</button>
+<button data-track="click:btn_login">Login</button>
 ```
 
-### 9. 国际化 (`src/locales/`)
+### 10. Internationalization (`src/locales/`)
 
-使用 `vue-i18n` 实现中英文切换，语言偏好持久化到 localStorage。覆盖 12 个命名空间：
+Uses `vue-i18n` v9 (Composition API mode) to implement Chinese/English switching, language preference persisted to localStorage via App store.
 
-`common` · `login` · `menu` · `header` · `dept` · `emp` · `clazz` · `student` · `report` · `error` · `password` · `layout`
+**Namespaces:** `common` · `login` · `menu` · `header` · `dept` · `emp` · `clazz` · `student` · `report` · `error` · `password` · `layout`
 
-切换方式：布局页头部下拉菜单，即时生效。
+**Configuration:**
 
-### 10. 全局错误处理 (`src/utils/errorHandler.js`)
+```typescript
+const i18n = createI18n({
+  legacy: false,
+  locale: appStore.language,
+  fallbackLocale: "zh-CN",
+  globalInjection: true,
+});
+```
 
-注册多层错误捕获，防止未处理异常导致白屏：
+### 11. Global Error Handling (`src/utils/errorHandler.js`)
+
+Registers 5-layer error capture:
 
 ```
 ┌──────────────────────────────────────┐
-│           错误捕获层级                │
+│           Error Capture Layers       │
 ├──────────────────────────────────────┤
-│ 1. app.config.errorHandler           │  ← Vue 组件内部错误
-│ 2. window.onerror (资源加载)          │  ← img/script/link 加载失败
-│ 3. window.onunhandledrejection        │  ← Promise 未 catch
+│ 1. app.config.errorHandler           │  ← Vue component internal errors (type: VUE)
+│ 2. window.onerror (resource)         │  ← img/script/link loading failures (type: RESOURCE)
+│ 3. window.onerror (JS)               │  ← Global JavaScript errors (type: JS)
+│ 4. window.onunhandledrejection       │  ← Promise unhandled rejection (type: PROMISE)
+│ 5. Network errors (Axios interceptor)│  ← HTTP request failures (type: NETWORK)
 └──────────────────┬───────────────────┘
                    ▼
-          聚合上报到 /api/log/report
+          Aggregate and report to /api/log/report (TODO)
 ```
+
+**Error Reporting:** Configured with throttle (5000ms), but backend integration is still `TODO` — currently only logs to console in development.
 
 ---
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Environment Requirements
 
 - Node.js >= 14.0.0
 - npm >= 6.0.0
 
-### 安装依赖
+### Install Dependencies
 
 ```sh
 npm install
 ```
 
-### 启动开发服务器
+### Start Development Server
 
 ```sh
 npm run dev
 ```
 
-默认运行在 `http://localhost:5173`。
+Runs on `http://localhost:5173` by default.
 
-### 构建生产版本
+### Build Commands
 
 ```sh
-npm run build          # 生产环境构建
-npm run build:dev      # 开发环境构建
-npm run build:test     # 测试环境构建
-npm run build:staging  # 预发布环境构建
+npm run build          # Production build (same as build:prod)
+npm run build:dev      # Development build
+npm run build:test     # Test environment build
+npm run build:staging  # Staging environment build
+npm run build:prod     # Production environment build
 ```
 
-### 预览生产构建
+### Preview Production Build
 
 ```sh
 npm run preview
 ```
 
-### 代码检查与修复
+### Code Lint & Fix
 
 ```sh
-npm run lint           # 检查并自动修复
+npm run lint           # Check and auto-fix ESLint issues
+npm run type-check     # TypeScript type checking
+```
+
+### Git Commit with Commitizen
+
+```sh
+npm run commit         # Interactive commit message generator
 ```
 
 ---
 
-## 后端接口配置
+## Backend API Configuration
 
-项目通过 Vite 开发服务器代理将 `/api` 前缀的请求转发到后端。
+The project uses Vite dev server proxy to forward requests with `/api` prefix to the backend.
 
-**默认配置：**
+**Default Configuration (vite.config.ts):**
 
-| 配置项   | 值                      |
-| -------- | ----------------------- |
-| 代理目标 | `http://localhost:8080` |
-| 代理路径 | `/api`                  |
-| 路径重写 | 去掉 `/api` 前缀        |
+| Config       | Value                   |
+| ------------ | ----------------------- |
+| Proxy Target | `http://localhost:8080` |
+| Proxy Path   | `/api`                  |
+| Path Rewrite | Remove `/api` prefix    |
+| Server Host  | `0.0.0.0`               |
+| Server Port  | `5173`                  |
+| CORS         | Enabled                 |
+| Auto Open    | Disabled                |
 
-例如前端请求 `GET /api/emps?page=1&pageSize=10` 会被转发到后端 `GET http://localhost:8080/emps?page=1&pageSize=10`。
+**Example:** Frontend request `GET /api/emps?page=1&pageSize=10` → Backend `GET http://localhost:8080/emps?page=1&pageSize=10`
 
-如需修改后端地址，请编辑 [vite.config.ts](vite.config.ts)：
+**To modify the backend address:**
 
-```javascript
+```typescript
+// vite.config.ts
 server: {
   proxy: {
     '/api': {
@@ -517,74 +737,112 @@ server: {
 }
 ```
 
-**环境变量：** 项目通过 `.env.*` 文件管理不同环境的配置（见下方构建部分）。
-
 ---
 
-## 开发规范
+## Development Guidelines
 
-### 路径别名
+### Path Alias
 
-项目已配置 `@` 别名指向 `src` 目录：
+The project has configured `@` alias pointing to `src` directory:
 
 ```javascript
-import xxx from "@/views/xxx"; // 等同于 import xxx from 'src/views/xxx'
+import xxx from "@/views/xxx"; // Equivalent to import xxx from 'src/views/xxx'
 ```
 
-### 命名规范
+### Naming Conventions
 
-| 类型       | 规范             | 示例                   |
-| ---------- | ---------------- | ---------------------- |
-| 文件名     | kebab-case       | `emp-form-dialog.vue`  |
-| 组件名     | PascalCase       | `EmpFormDialog`        |
-| 路由名     | kebab-case       | `emp-mgmt`             |
-| Store 变量 | camelCase        | `userStore`            |
-| API 函数   | camelCase + 动词 | `getEmpList`, `addEmp` |
-| 权限标识   | kebab 三段式     | `system:emp:list`      |
+| Type            | Convention          | Example                |
+| --------------- | ------------------- | ---------------------- |
+| File Name       | kebab-case          | `emp-form-dialog.vue`  |
+| Component Name  | PascalCase          | `EmpFormDialog`        |
+| Route Name      | kebab-case          | `emp-mgmt`             |
+| Store Variable  | camelCase           | `userStore`            |
+| API Function    | camelCase + verb    | `getEmpList`, `addEmp` |
+| Permission Code | kebab three-segment | `system:emp:list`      |
 
-### API 函数命名约定
+### API Function Naming Convention
 
-所有 API 函数遵循统一的动词前缀命名：
+All API functions follow unified verb-prefix naming:
 
-| 操作     | 命名模式        | 示例              |
-| -------- | --------------- | ----------------- |
-| 查询列表 | `getXxxList`    | `getEmpList`      |
-| 查询详情 | `getXxxById`    | `getDeptById`     |
-| 新增     | `addXxx`        | `addEmp`          |
-| 修改     | `updateXxx`     | `updateEmp`       |
-| 删除     | `deleteXxx`     | `deleteEmp`       |
-| 下拉选项 | `getAllXxxList` | `getAllClazzList` |
+| Operation        | Naming Pattern  | Example           |
+| ---------------- | --------------- | ----------------- |
+| Query List       | `getXxxList`    | `getEmpList`      |
+| Query Detail     | `getXxxById`    | `getDeptById`     |
+| Create           | `addXxx`        | `addEmp`          |
+| Update           | `updateXxx`     | `updateEmp`       |
+| Delete           | `deleteXxx`     | `deleteEmp`       |
+| Dropdown Options | `getAllXxxList` | `getAllClazzList` |
+
+### Environment Variables
+
+| File               | Purpose                       |
+| ------------------ | ----------------------------- |
+| `.env.development` | Local development environment |
+| `.env.production`  | Production environment        |
+| `.env.test`        | Test environment              |
+| `.env.staging`     | Staging environment           |
+
+**Vite Environment Variables (`.env.*` files):**
+
+| Variable               | Description                                                          |
+| ---------------------- | -------------------------------------------------------------------- |
+| `VITE_APP_TITLE`       | Application title                                                    |
+| `VITE_API_BASE_URL`    | API base path                                                        |
+| `VITE_APP_ENV`         | Current environment identifier (development/production/test/staging) |
+| `VITE_APP_VERSION`     | Application version                                                  |
+| `VITE_ENABLE_MOCK`     | Whether to enable Mock data                                          |
+| `VITE_ENABLE_DEVTOOLS` | Whether to enable Vue DevTools                                       |
+
+**Build-time Variables (defined in vite.config.ts):**
+
+| Variable            | Description                    |
+| ------------------- | ------------------------------ |
+| `__APP_ENV__`       | Current environment identifier |
+| `__BUILD_TIME__`    | Build timestamp (ISO format)   |
+| `__BUILD_VERSION__` | Application version            |
+| `__BUILD_ENV__`     | Build mode                     |
 
 ---
 
-## 构建与部署
+## Build & Deployment
 
-### 环境变量
+### Build Optimization
 
-| 文件               | 用途         |
-| ------------------ | ------------ |
-| `.env.development` | 本地开发环境 |
-| `.env.production`  | 生产环境     |
-| `.env.test`        | 测试环境     |
-| `.env.staging`     | 预发布环境   |
+| Optimization         | Implementation                                 |
+| -------------------- | ---------------------------------------------- |
+| **Code Splitting**   | Manual chunks: vue, elementPlus, echarts, i18n |
+| **gzip Compression** | `vite-plugin-compression`, threshold 10KB      |
+| **Tree Shaking**     | Enabled by Vite default                        |
+| **Source Map**       | Enabled in dev, disabled in production         |
+| **Minification**     | `esbuild`                                      |
+| **Target**           | `esnext`                                       |
 
-| 变量                | 说明          |
-| ------------------- | ------------- |
-| `VITE_APP_TITLE`    | 应用标题      |
-| `VITE_API_BASE_URL` | API 基础路径  |
-| `VITE_APP_ENV`      | 当前环境标识  |
-| `VITE_APP_VERSION`  | 版本号        |
-| `VITE_ENABLE_MOCK`  | 是否启用 Mock |
+### Build Output Structure
 
-### 构建优化
+```
+dist/
+├── assets/
+│   ├── js/
+│   │   ├── vue-[hash].js
+│   │   ├── elementPlus-[hash].js
+│   │   ├── echarts-[hash].js
+│   │   ├── i18n-[hash].js
+│   │   └── [name]-[hash].js
+│   ├── css/
+│   │   └── [name]-[hash].css
+│   └── img/
+│       └── [name]-[hash].[ext]
+├── index.html
+└── *.gz (gzip compressed assets)
+```
 
-- **代码分割**：Vue / Element Plus / ECharts / i18n 分离为独立 chunk
-- **gzip 压缩**：大于 10KB 的资源自动压缩
-- **Tree Shaking**：移除未使用的代码
-- **Source Map**：生产环境关闭
+### Git Hooks
+
+- **pre-commit**: Runs `lint-staged` to lint staged files
+- **commit-msg**: Validates commit message format using Commitlint
 
 ---
 
-## 推荐 IDE
+## Recommended IDE
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)（请禁用 Vetur）
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (Please disable Vetur)
